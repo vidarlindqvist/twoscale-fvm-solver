@@ -25,6 +25,24 @@ Install with `-e` (editable). It puts `src/` on the import path so
 reinstalling. A plain `pip install .` instead leaves a stale copy of the package
 in a `build/` directory, which is a common source of confusion.
 
+### Installing the development tools
+
+Anything needed only for development is declared as an optional extra rather
+than a hard dependency, so `pip install -e .` does not pull it in. Name the
+extra in brackets to get it as well:
+
+```bash
+pip install -e ".[dev]"
+```
+
+That installs the package exactly as above, plus `pytest`. The name `dev` comes
+from the `[project.optional-dependencies]` table in `pyproject.toml`, so adding
+another tool there makes it available through the same command, and anyone who
+only wants to run the solvers can keep ignoring it.
+
+Keep the quotes around `".[dev]"`. Most shells try to expand bare brackets as a
+glob pattern and the install fails with a confusing error.
+
 ## What to run
 
 ```bash
@@ -38,6 +56,20 @@ python examples/lcc.py
 | `verify_cartesian.py` | cartesian solver against the analytical solution, on a high aspect ratio pad where side leakage is negligible | aspect ratio, relative RMS error, `comparison.png` |
 | `verify_polar.py` | polar solver against the cartesian one, on matched near-square domains | aspect ratio, relative RMS error, `verify_polar.png` |
 | `lcc.py` | load carrying capacity of the bearing, and the shaft speed needed to carry 650 kN | dimensionless LCC, shaft speed |
+
+## Tests
+
+Needs the `dev` extra above. Run from the repo root:
+
+```bash
+pytest
+```
+
+`tests/test_physics.py` checks invariants that have to hold for either solver
+and any geometry: a flat film generates no pressure, the boundary pressure is
+exactly zero, and a converging wedge generates positive pressure.
+
+## Using the solvers directly
 
 The solvers themselves live in `src/reynolds/` and are importable on their own:
 
