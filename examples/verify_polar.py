@@ -32,8 +32,8 @@ polar_pressure, R_vector, theta_vector, theta2 = polar.solve(
     delta_h=delta_h,
     r_nodes=n_span,
     theta_nodes=n_sliding,
-    theta1 = 0,
-    theta2= (Ro-Ri)/Ri    
+    theta1=0,
+    theta2=(Ro - Ri) / Ri,
 )
 
 polar_scale = Ro / (Ro - Ri)

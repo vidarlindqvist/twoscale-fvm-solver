@@ -1,12 +1,15 @@
 """FVM solver for the Reynolds equation on an annular sector tilted pad.
 
-Takes the inner and outer radius, the film taper, the grid size and the pad angle.
+Takes the inner and outer radius, the film taper, the grid size, the pad angle and
+optionally a film thickness callable overriding the default tilted pad.
 Returns the dimensionless pressure field, the R and theta grid vectors and theta2.
 """
 
 import numpy as np
 from scipy.sparse import spdiags
 from scipy.sparse.linalg import spsolve
+
+from . import film
 
 
 def solve(
@@ -20,10 +23,9 @@ def solve(
     theta_nodes=50,
     theta1=0,
     theta2=55 * np.pi / 180,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
-
+    film_thickness=film.polar,
+):
     # (Ro-Ri) = Ri * theta2
-
     # Grid
     R_vector = np.linspace(Ri / Ro, 1, r_nodes)
     theta_vector = np.linspace(theta1, theta2, theta_nodes)
@@ -39,15 +41,8 @@ def solve(
     theta_north = theta + delta_theta / 2
     theta_south = theta - delta_theta / 2
 
-    # Real height function
-    def h(r, theta):
-        return h0 + delta_h * r * np.sin(theta2 - theta) / (
-            (Ri + Ro) / 2 * np.sin(theta2)
-        )
-
     # Dimensionless height function
-    def H(r, theta):
-        return h(r * Ro, theta) / h0
+    H = film_thickness(Ri, Ro, delta_h, h0, theta2)
 
     # Height at intermediate points
     H_east = H(R_east, theta)
