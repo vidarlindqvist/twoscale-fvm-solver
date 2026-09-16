@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.sparse import spdiags
+from scipy.sparse.linalg import spsolve
 
 np.set_printoptions(linewidth=200)
 
@@ -45,14 +46,9 @@ a_west = 1 / delta_X**2 * H_west.flatten() ** 3
 a_north = 1 / delta_Y**2 * H_north.flatten() ** 3 
 a_south = 1 / delta_Y**2 * H_south.flatten() ** 3 
 a_P = a_east + a_west + a_north + a_south
-rhs = -((H_east - H_west) / delta_X).flatten()
+C_P = -((H_east - H_west) / delta_X).flatten()
 
-# Finding the boundaries. 0 if it is on the boundary, 1 if not. 
-is_not_east_boundary = np.mod(np.arange(1, x_nodes * y_nodes + 1), x_nodes) > 0
-is_not_west_boundary = np.mod(np.arange(x_nodes * y_nodes), x_nodes) > 0
-is_not_north_boundary = np.arange(1, x_nodes * y_nodes + 1) <= ((y_nodes - 1) * x_nodes)
-is_not_south_boundary = np.arange(1, x_nodes * y_nodes + 1) > x_nodes
-
+# Finding the boundaries. 1 if it is on the boundary, 0 if not. 
 is_boundary = np.zeros((y_nodes, x_nodes), dtype = bool)
 is_boundary[0,:] = True
 is_boundary[:,0] = True
@@ -62,21 +58,23 @@ is_boundary[:,-1] = True
 is_boundary = is_boundary.flatten()
 
 # Building and formatting the diagonals for spdiags
-east_diagonal = -np.append([0], (a_east * is_not_east_boundary)[:-1]) * (~is_boundary)
-west_diagonal = -np.append((a_west * is_not_west_boundary)[1:], [0]) * (~is_boundary)
-north_diagonal = -np.append(np.zeros((x_nodes, )), (a_north * is_not_north_boundary)[:-x_nodes]) * (~is_boundary)
-south_diagonal = -np.append((a_south * is_not_south_boundary)[x_nodes:], np.zeros((x_nodes, ))) * (~is_boundary)
+east_diagonal = -np.append([0], a_east[:-1]) * (~is_boundary)
+west_diagonal = -np.append(a_west[1:], [0]) * (~is_boundary)
+north_diagonal = -np.append(np.zeros((x_nodes, )), a_north[:-x_nodes]) * (~is_boundary)
+south_diagonal = -np.append(a_south[x_nodes:], np.zeros((x_nodes, ))) * (~is_boundary)
+
+# The equation will be pressure * a_P = 0 on the boundary, forcing pressure = 0
+a_P[is_boundary] = 1.0
+C_P[is_boundary] = 0.0
 
 # Building the system
 diagonals = [a_P, east_diagonal, west_diagonal, north_diagonal, south_diagonal]
 A = spdiags(diagonals, [0, 1, -1, x_nodes, -x_nodes], [x_nodes * y_nodes, x_nodes * y_nodes])
 
 # Solving
-pressure = np.linalg.solve(A.toarray(), rhs).reshape(y_nodes, x_nodes)
+pressure = spsolve(A.toscr(), C_P).reshape(y_nodes, x_nodes)
 
-# 1D Analytical solution
-def pressure_1D(Xs):
-    return 1 / (delta_H * H(Xs, 0)) - (1 + delta_H) / (delta_H * (2 + delta_H) * H(Xs, 0) ** 2)- 1/(delta_H*(2 + delta_H))
+
 
 Xs = np.linspace(0, 1, 50)
 # Plotting
