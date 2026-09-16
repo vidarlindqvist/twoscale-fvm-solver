@@ -17,6 +17,7 @@ n_span = 50
 theta1 = 0
 theta2 = 55 * np.pi / 180
 eta0 = 30e-3
+lcc = 650e3 # Newton
 
 
 dimless_polar_pressure, R_vector, theta_vector, _ = polar.solve(
@@ -30,12 +31,11 @@ dimless_polar_pressure, R_vector, theta_vector, _ = polar.solve(
     theta2=theta2,
 )
 
-# LCC is the integal of dimless pressure over dimless area
+# LCC (dimless lcc) is the integal of dimless pressure over dimless area
 LCC = 6 * np.mean(dimless_polar_pressure) * (theta2 - theta1) * (Ro**2 - Ri**2) / 2
 
-# Rescaling lcc
-omega = 650.0e3 / (LCC * 6 * eta0 * Ro**2 / h0**2)
-lcc = LCC * 6 * eta0 * omega * Ro**4 / h0**2
+# Evaluating the required angular velocity
+omega = lcc / (LCC * 6 * eta0 * Ro**2 / h0**2)
 
 print(LCC)
 print(omega)
