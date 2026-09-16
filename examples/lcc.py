@@ -1,3 +1,9 @@
+"""Load carrying capacity of the hydropower thrust bearing from Table 1.
+
+Takes the bearing geometry, the lubricant viscosity and the target load.
+Prints the dimensionless LCC and the shaft speed needed to reach that load.
+"""
+
 import numpy as np
 
 from reynolds import polar
@@ -13,24 +19,23 @@ theta2 = 55 * np.pi / 180
 eta0 = 30e-3
 
 
-dimless_polar_pressure, R_vector, theta_vector, theta2 = polar.solve(
+dimless_polar_pressure, R_vector, theta_vector, _ = polar.solve(
     Ri=Ri,
     Ro=Ro,
     h0=h0,
     delta_h=delta_h,
     r_nodes=n_span,
     theta_nodes=n_sliding,
-    theta1 = theta1,
-    theta2 = theta2
+    theta1=theta1,
+    theta2=theta2,
 )
 
 # LCC is the integal of dimless pressure over dimless area
-# The integral equals the mean pressure times the area
-LCC = np.mean(dimless_polar_pressure) * (theta2 - theta1) * (Ro ** 2 - Ri ** 2) / 2
+LCC = 6 * np.mean(dimless_polar_pressure) * (theta2 - theta1) * (Ro**2 - Ri**2) / 2
 
 # Rescaling lcc
-omega = 650e3 / (LCC * 6 * eta0 * Ro ** 2 / h0 ** 2)
-lcc = LCC * 6 * eta0 * omega * Ro ** 2 / h0 ** 2
+omega = 650.0e3 / (LCC * 6 * eta0 * Ro**2 / h0**2)
+lcc = LCC * 6 * eta0 * omega * Ro**4 / h0**2
 
 print(LCC)
 print(omega)

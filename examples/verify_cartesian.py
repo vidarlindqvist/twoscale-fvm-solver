@@ -1,3 +1,9 @@
+"""Verification of the cartesian FVM solution against the analytical one.
+
+Solves a high aspect ratio pad where side leakage is negligible.
+Prints the aspect ratio and the relative RMS error, and saves comparison.png.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 

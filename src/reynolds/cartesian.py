@@ -1,3 +1,9 @@
+"""FVM solver for the Reynolds equation on a rectangular tilted pad.
+
+Takes the pad length and width, the film taper and the grid size.
+Returns the dimensionless pressure field, the X and Y grid vectors and delta_H.
+"""
+
 import numpy as np
 from scipy.sparse import spdiags
 from scipy.sparse.linalg import spsolve
