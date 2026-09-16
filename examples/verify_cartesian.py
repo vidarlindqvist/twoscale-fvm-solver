@@ -3,17 +3,20 @@ import numpy as np
 
 from reynolds import analytical, cartesian, polar
 
-l = 500e-3
-b = 500e-3
+l = 100e-3
+b = 100e-3
 delta_h = 5e-6
 h0 = 20e-6
 x_nodes = 50
 y_nodes = 50
 
-Ri = 299e-3
-Ro = 300e-3
+Ri = 499e-3
+Ro = 500e-3
 r_nodes = 50
 theta_nodes = 50
+
+# The radial scale goes from Ri/R0 to 1 while cartesian always goes from 0 to 1
+polar_scaling_factor = Ro/(Ro-Ri)
 
 cartesian_pressure, X_vector, Y_vector, delta_H = cartesian.solve(
     l=l,
@@ -39,7 +42,8 @@ analytical_pressure = analytical.pressure_1D(Xs, delta_H)
 fig, ax = plt.subplots(figsize=(10, 6))
 ax.plot(Xs, analytical_pressure, label="Analytical 1D")
 ax.plot(X_vector, cartesian_pressure[y_nodes // 2, :], label="Cartesian FVM")
-ax.plot(theta_vector / theta2, polar_pressure[:, r_nodes // 2], label="Polar FVM")
+ax.plot(theta_vector / theta2, polar_pressure[:, r_nodes // 2]*polar_scaling_factor, label="Polar FVM")
+#mesh = plt.pcolormesh(polar_pressure)
 
 ax.set_xlabel("Dimensionless sliding direction")
 ax.set_ylabel("Dimensionless pressure")

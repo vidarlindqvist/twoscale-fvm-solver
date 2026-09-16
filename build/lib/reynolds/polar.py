@@ -5,8 +5,8 @@ from scipy.sparse.linalg import spsolve
 
 def solve(
     # Input data
-    Ri=499e-3,
-    Ro=500e-3,
+    Ri=299e-3,
+    Ro=300e-3,
     h0=20e-6,
     delta_h=5e-6,
     # Grid size
@@ -14,8 +14,7 @@ def solve(
     theta_nodes=50,
 ):
     theta1 = 0
-    theta2 =  (Ro - Ri) / Ri # 55 *np.pi / 180
-    # (Ro-Ri) = Ri * theta2
+    theta2 = (Ro - Ri) / Ri # 55 *np.pi / 180
 
     # Grid
     R_vector = np.linspace(Ri/Ro, 1, r_nodes)
@@ -66,10 +65,10 @@ def solve(
     is_boundary = is_boundary.flatten()
 
     # Building and formatting the diagonals for spdiags
-    east_diagonal = -np.append([0], (a_east * (~is_boundary))[:-1])
-    west_diagonal = -np.append((a_west * (~is_boundary))[1:], [0])
-    north_diagonal = -np.append(np.zeros((r_nodes, )), (a_north * (~is_boundary))[:-r_nodes])
-    south_diagonal = -np.append((a_south * (~is_boundary))[r_nodes:], np.zeros((r_nodes, )))
+    east_diagonal = -np.append([0], a_east[:-1]) * (~is_boundary)
+    west_diagonal = -np.append(a_west [1:], [0]) * (~is_boundary)
+    north_diagonal = -np.append(np.zeros((r_nodes, )), a_north[:-r_nodes]) * (~is_boundary)
+    south_diagonal = -np.append(a_south[r_nodes:], np.zeros((r_nodes, ))) * (~is_boundary)
 
     # The equation will be pressure * a_P = 0 on the boundary, forcing pressure = 0
     a_P[is_boundary] = 1.0
@@ -82,7 +81,7 @@ def solve(
     # Solving
     pressure = spsolve(A.tocsr(), C_P).reshape(theta_nodes, r_nodes)
 
-    return pressure * 1, R_vector, theta_vector, theta2
+    return pressure, R_vector, theta_vector, theta2
 
 
 #plt.subplot(projection="3d").plot_surface(*np.indices(pressure.shape), pressure, cmap="viridis")
