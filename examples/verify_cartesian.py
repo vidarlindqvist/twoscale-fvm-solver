@@ -1,22 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from reynolds import analytical, cartesian, polar
+from reynolds import analytical, cartesian
 
-l = 100e-3
-b = 100e-3
+l = 148e-3
+b = 500e-3
 delta_h = 5e-6
 h0 = 20e-6
-x_nodes = 50
-y_nodes = 50
+x_nodes = 100
+y_nodes = 100
 
-Ri = 499e-3
-Ro = 500e-3
-r_nodes = 50
-theta_nodes = 50
-
-# The radial scale goes from Ri/R0 to 1 while cartesian always goes from 0 to 1
-polar_scaling_factor = Ro/(Ro-Ri)
 
 cartesian_pressure, X_vector, Y_vector, delta_H = cartesian.solve(
     l=l,
@@ -27,23 +20,21 @@ cartesian_pressure, X_vector, Y_vector, delta_H = cartesian.solve(
     y_nodes=y_nodes,
 )
 
-polar_pressure, R_vector, theta_vector, theta2 = polar.solve(
-    Ri=Ri,
-    Ro=Ro,
-    h0=h0,
-    delta_h=delta_h,
-    r_nodes=r_nodes,
-    theta_nodes=theta_nodes,
-)
 
 Xs = np.linspace(0, 1, x_nodes)
 analytical_pressure = analytical.pressure_1D(Xs, delta_H)
 
+difference = cartesian_pressure[y_nodes // 2, :] - analytical_pressure
+rms_error = np.sqrt(np.mean(difference**2)) / np.sqrt(np.mean(cartesian_pressure**2))
+
 fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(Xs, analytical_pressure, label="Analytical 1D")
+text_str = f"Aspect ratio: {l/b}\nRMS Error: {rms_error: .2e}"
+bbox = dict(boxstyle="round", facecolor="white", alpha=0.8)
+
+ax.text(0.80, 0.85, text_str, transform=ax.transAxes, verticalalignment="top", bbox=bbox)
 ax.plot(X_vector, cartesian_pressure[y_nodes // 2, :], label="Cartesian FVM")
-ax.plot(theta_vector / theta2, polar_pressure[:, r_nodes // 2]*polar_scaling_factor, label="Polar FVM")
-#mesh = plt.pcolormesh(polar_pressure)
+ax.plot(Xs, analytical_pressure, "--", label="Analytical 1D")
+
 
 ax.set_xlabel("Dimensionless sliding direction")
 ax.set_ylabel("Dimensionless pressure")

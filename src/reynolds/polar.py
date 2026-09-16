@@ -82,7 +82,7 @@ def solve(
     # Solving
     pressure = spsolve(A.tocsr(), C_P).reshape(theta_nodes, r_nodes)
 
-    return pressure * 1, R_vector, theta_vector, theta2
+    return pressure, R_vector, theta_vector, theta2
 
 
 #plt.subplot(projection="3d").plot_surface(*np.indices(pressure.shape), pressure, cmap="viridis")

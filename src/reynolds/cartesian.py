@@ -39,7 +39,7 @@ def solve(
     H_south = H(X, Y - delta_Y / 2)
 
     # Coefficients for FVM formulation
-    # a_P*P_P = a_E+...+a_S+rhs
+    # a_P*P_P = a_E+...+a_S+C_P
     a_east = 1 / delta_X**2 * H_east.flatten() ** 3
     a_west = 1 / delta_X**2 * H_west.flatten() ** 3
     a_north = 1 / delta_Y**2 * H_north.flatten() ** 3

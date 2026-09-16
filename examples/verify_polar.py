@@ -51,7 +51,7 @@ ax.set_xlabel("Dimensionless sliding direction")
 ax.set_ylabel("Dimensionless pressure")
 ax.legend()
 
-text_str = f"Aspect ratio: {aspect_ratio}\nError: {rms_error: .2e}"
+text_str = f"Aspect ratio: {aspect_ratio: .2e}\nRMS Error: {rms_error: .2e}"
 bbox = {"boxstyle": "round", "facecolor": "white", "alpha": 0.8}
 
 ax.text(
