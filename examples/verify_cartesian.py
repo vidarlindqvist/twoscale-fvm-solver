@@ -27,6 +27,9 @@ analytical_pressure = analytical.pressure_1D(Xs, delta_H)
 difference = cartesian_pressure[y_nodes // 2, :] - analytical_pressure
 rms_error = np.sqrt(np.mean(difference**2)) / np.sqrt(np.mean(cartesian_pressure**2))
 
+print(f"Cartesian aspect ratio   {l/b:.4f}")
+print(f"Relative RMS error   {rms_error:.3e}")
+
 fig, ax = plt.subplots(figsize=(10, 6))
 text_str = f"Aspect ratio: {l/b}\nRMS Error: {rms_error: .2e}"
 bbox = dict(boxstyle="round", facecolor="white", alpha=0.8)

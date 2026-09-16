@@ -12,9 +12,10 @@ def solve(
     # Grid size
     r_nodes=50,
     theta_nodes=50,
+    theta1 = 0,
+    theta2 = 55 * np.pi / 180
 ):
-    theta1 = 0
-    theta2 =  (Ro - Ri) / Ri # 55 *np.pi / 180
+    
     # (Ro-Ri) = Ri * theta2
 
     # Grid
@@ -84,5 +85,3 @@ def solve(
 
     return pressure, R_vector, theta_vector, theta2
 
-
-#plt.subplot(projection="3d").plot_surface(*np.indices(pressure.shape), pressure, cmap="viridis")

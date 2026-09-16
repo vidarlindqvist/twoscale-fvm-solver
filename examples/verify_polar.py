@@ -26,6 +26,8 @@ polar_pressure, R_vector, theta_vector, theta2 = polar.solve(
     delta_h=delta_h,
     r_nodes=n_span,
     theta_nodes=n_sliding,
+    theta1 = 0,
+    theta2= (Ro-Ri)/Ri    
 )
 
 polar_scale = Ro / (Ro - Ri)
@@ -55,7 +57,7 @@ text_str = f"Aspect ratio: {aspect_ratio: .2e}\nRMS Error: {rms_error: .2e}"
 bbox = {"boxstyle": "round", "facecolor": "white", "alpha": 0.8}
 
 ax.text(
-    0.05, 0.95, text_str, transform=ax.transAxes, verticalalignment="top", bbox=bbox
+    0.775, 0.85, text_str, transform=ax.transAxes, verticalalignment="top", bbox=bbox
 )
 fig.savefig("verify_polar.png", dpi=200, bbox_inches="tight")
 plt.show()

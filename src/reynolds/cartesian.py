@@ -75,8 +75,3 @@ def solve(
 
     return pressure, X_vector, Y_vector, delta_H
 
-
-# Plotting
-
-#plt.plot(Xs, pressure_1D(Xs), X_vector, pressure[50,:])
-#plt.subplot(projection="3d").plot_surface(*np.indices(pressure.shape), pressure, cmap="viridis")
