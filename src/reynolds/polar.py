@@ -6,10 +6,9 @@ Returns the dimensionless pressure field, the R and theta grid vectors and theta
 """
 
 import numpy as np
-from scipy.sparse import spdiags
 from scipy.sparse.linalg import spsolve
 
-from . import film
+from . import assembly, film
 
 
 def solve(
@@ -72,26 +71,13 @@ def solve(
 
     is_boundary = is_boundary.flatten()
 
-    # Building and formatting the diagonals for spdiags
-    east_diagonal = -np.append([0], (a_east * (~is_boundary))[:-1])
-    west_diagonal = -np.append((a_west * (~is_boundary))[1:], [0])
-    north_diagonal = -np.append(
-        np.zeros((r_nodes,)), (a_north * (~is_boundary))[:-r_nodes]
-    )
-    south_diagonal = -np.append(
-        (a_south * (~is_boundary))[r_nodes:], np.zeros((r_nodes,))
-    )
-
     # The equation will be pressure * a_P = 0 on the boundary, forcing pressure = 0
     a_P[is_boundary] = 1.0
     C_P[is_boundary] = 0.0
 
     # Building the system
-    diagonals = [a_P, east_diagonal, west_diagonal, north_diagonal, south_diagonal]
-    A = spdiags(
-        diagonals,
-        [0, 1, -1, r_nodes, -r_nodes],
-        [r_nodes * theta_nodes, r_nodes * theta_nodes],
+    A = assembly.five_point(
+        a_east, a_west, a_north, a_south, a_P, r_nodes, theta_nodes, is_boundary
     )
 
     # Solving

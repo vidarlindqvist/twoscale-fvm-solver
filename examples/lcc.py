@@ -37,5 +37,5 @@ LCC = 6 * np.mean(dimless_polar_pressure) * (theta2 - theta1) * (Ro**2 - Ri**2) 
 # Evaluating the required angular velocity
 omega = lcc / (LCC * 6 * eta0 * Ro**2 / h0**2)
 
-print(LCC)
-print(omega)
+print("LCC:", LCC)
+print("omega:", omega)

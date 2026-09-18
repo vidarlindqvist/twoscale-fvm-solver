@@ -51,5 +51,5 @@ ax.set_xlabel("Dimensionless sliding direction")
 ax.set_ylabel("Dimensionless pressure")
 ax.legend()
 
-fig.savefig("comparison.png", dpi=200, bbox_inches="tight")
+fig.savefig("verify_cartesian.png", dpi=200, bbox_inches="tight")
 plt.show()
