@@ -2,6 +2,9 @@
 
 Takes the pad geometry and the film taper.
 Returns a callable giving the dimensionless film thickness on the dimensionless grid.
+
+faces() evaluates any of those callables at the four cell faces, which is the
+pattern every solver needs before forming its coefficients.
 """
 
 import numpy as np
@@ -31,3 +34,13 @@ def polar(Ri, Ro, delta_h, h0, theta2):
         return h(r * Ro, theta) / h0
 
     return H
+
+
+def faces(H, first, second, d_first, d_second):
+    """Film thickness at the east, west, north and south faces of every cell."""
+    return (
+        H(first + d_first / 2, second),
+        H(first - d_first / 2, second),
+        H(first, second + d_second / 2),
+        H(first, second - d_second / 2),
+    )

@@ -44,10 +44,7 @@ def solve(
     H = film_thickness(Ri, Ro, delta_h, h0, theta2)
 
     # Height at intermediate points
-    H_east = H(R_east, theta)
-    H_west = H(R_west, theta)
-    H_north = H(R, theta_north)
-    H_south = H(R, theta_south)
+    H_east, H_west, H_north, H_south = film.faces(H, R, theta, delta_R, delta_theta)
 
     # Coefficients for FVM formulation
     # a_P*P_P = a_E+...+a_S+C_P
