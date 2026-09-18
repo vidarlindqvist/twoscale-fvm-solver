@@ -8,7 +8,7 @@ Returns the dimensionless pressure field, the X and Y grid vectors and delta_H.
 import numpy as np
 from scipy.sparse.linalg import spsolve
 
-from . import assembly, film
+from . import assembly, boundary, film
 
 
 def solve(
@@ -49,13 +49,7 @@ def solve(
     C_P = -((H_east - H_west) / delta_X).flatten()
 
     # Finding the boundaries. 1 if it is on the boundary, 0 if not.
-    is_boundary = np.zeros((y_nodes, x_nodes), dtype=bool)
-    is_boundary[0, :] = True
-    is_boundary[:, 0] = True
-    is_boundary[-1, :] = True
-    is_boundary[:, -1] = True
-
-    is_boundary = is_boundary.flatten()
+    is_boundary = boundary.all_edges(x_nodes, y_nodes)
 
     # The equation will be pressure * a_P = 0 on the boundary, forcing pressure = 0
     a_P[is_boundary] = 1.0
