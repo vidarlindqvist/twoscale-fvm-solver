@@ -1,13 +1,16 @@
-"""Verification of the cartesian FVM solution against the analytical one.
+"""Solution of the periodic FVM problem.
 
-Solves a high aspect ratio pad where side leakage is negligible.
-Prints the aspect ratio and the relative RMS error, and saves comparison.png.
+Solves on a square pad and shows the pressure field as an interactive 3D
+surface that can be rotated and zoomed.
 """
+
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.mplot3d.axes3d import Axes3D
 
-from reynolds import analytical, periodic
+from reynolds import periodic
 
 l = 500e-3
 b = 500e-3
@@ -16,10 +19,10 @@ h0 = 20e-6
 x_nodes = 100
 y_nodes = 100
 k = 1
-e = [1,0]
+e = [1, 0]
 
 
-periodic_pressure, X_vector, Y_vector, delta_H = periodic.solve(
+periodic_pressure, X_vector, Y_vector, _ = periodic.solve(
     l=l,
     b=b,
     delta_h=delta_h,
@@ -30,36 +33,15 @@ periodic_pressure, X_vector, Y_vector, delta_H = periodic.solve(
     e=e,
 )
 
+X, Y = np.meshgrid(X_vector, Y_vector)
 
-Xs = np.linspace(0, 1, x_nodes)
-analytical_pressure = analytical.pressure_1D(Xs, delta_H)
-
-difference = periodic_pressure[y_nodes // 2, :] - analytical_pressure
-rms_error = np.sqrt(np.mean(difference**2)) / np.sqrt(np.mean(periodic_pressure**2))
-
-print(f"Cartesian aspect ratio   {l / b:.4f}")
-print(f"Relative RMS error   {rms_error:.3e}")
-
-fig, ax = plt.subplots(figsize=(10, 6))
-text_str = f"Aspect ratio: {l / b}\nRMS Error: {rms_error: .2e}"
-bbox = {"boxstyle": "round", "facecolor": "white", "alpha": 0.8}
-
-ax.text(
-    0.80, 0.85, text_str, transform=ax.transAxes, verticalalignment="top", bbox=bbox
-)
-ax.plot(X_vector, periodic_pressure[y_nodes // 2, :], label="Cartesian FVM")
-ax.plot(Xs, analytical_pressure, "--", label="Analytical 1D")
-
+fig = plt.figure(figsize=(10, 7))
+ax = cast(Axes3D, fig.add_subplot(projection="3d"))
+surf = ax.plot_surface(X, Y, periodic_pressure, cmap="viridis", linewidth=0)
+fig.colorbar(surf, ax=ax, shrink=0.6, pad=0.1, label="Dimensionless pressure")
 
 ax.set_xlabel("Dimensionless sliding direction")
-ax.set_ylabel("Dimensionless pressure")
-ax.legend()
+ax.set_ylabel("Dimensionless span direction")
+ax.set_zlabel("Dimensionless pressure", labelpad=12)
 
-fig.savefig("verify_cartesian.png", dpi=200, bbox_inches="tight")
-
-plt.ion()
-X, Y = np.meshgrid(X_vector, Y_vector)
-fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-surf = ax.plot_surface(X,Y,periodic_pressure, cmap="viridis",
-                       linewidth=0, antialiased=False)
-plt.show(block=False)
+plt.show()
