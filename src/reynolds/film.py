@@ -9,7 +9,6 @@ pattern every solver needs before forming its coefficients.
 
 import numpy as np
 
-
 def cartesian(l, b, delta_h, h0):
     # Real height function
     def h(x, y):
@@ -33,6 +32,13 @@ def polar(Ri, Ro, delta_h, h0, theta2):
     def H(r, theta):
         return h(r * Ro, theta) / h0
 
+    return H
+
+def periodic(l1,l2,epsilon):
+    def h(x1,x2):
+        return np.sin(2*np.pi/l1*x1)*np.sin(2*np.pi/l2*x2)*epsilon+2*epsilon
+    def H(x1,x2):
+        return h(x1*l2,x2*l2)/epsilon
     return H
 
 

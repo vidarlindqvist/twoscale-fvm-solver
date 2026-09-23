@@ -19,3 +19,9 @@ def all_edges(n_cols, n_rows):
     edges[-1, :] = True
     edges[:, -1] = True
     return edges.flatten()
+
+
+def pin(size, node=0):
+    pinned = np.zeros(size, dtype=bool)
+    pinned[node] = True
+    return pinned

@@ -7,31 +7,35 @@ Prints the aspect ratio and the relative RMS error, and saves comparison.png.
 import matplotlib.pyplot as plt
 import numpy as np
 
-from reynolds import analytical, cartesian
+from reynolds import analytical, periodic
 
-l = 148e-3
+l = 500e-3
 b = 500e-3
 delta_h = 5e-6
 h0 = 20e-6
-x_nodes = 5
-y_nodes = 5
+x_nodes = 100
+y_nodes = 100
+k = 1
+e = [1,0]
 
 
-cartesian_pressure, X_vector, Y_vector, delta_H = cartesian.solve(
+periodic_pressure, X_vector, Y_vector, delta_H = periodic.solve(
     l=l,
     b=b,
     delta_h=delta_h,
     h0=h0,
     x_nodes=x_nodes,
     y_nodes=y_nodes,
+    k=k,
+    e=e,
 )
 
 
 Xs = np.linspace(0, 1, x_nodes)
 analytical_pressure = analytical.pressure_1D(Xs, delta_H)
 
-difference = cartesian_pressure[y_nodes // 2, :] - analytical_pressure
-rms_error = np.sqrt(np.mean(difference**2)) / np.sqrt(np.mean(cartesian_pressure**2))
+difference = periodic_pressure[y_nodes // 2, :] - analytical_pressure
+rms_error = np.sqrt(np.mean(difference**2)) / np.sqrt(np.mean(periodic_pressure**2))
 
 print(f"Cartesian aspect ratio   {l / b:.4f}")
 print(f"Relative RMS error   {rms_error:.3e}")
@@ -43,7 +47,7 @@ bbox = {"boxstyle": "round", "facecolor": "white", "alpha": 0.8}
 ax.text(
     0.80, 0.85, text_str, transform=ax.transAxes, verticalalignment="top", bbox=bbox
 )
-ax.plot(X_vector, cartesian_pressure[y_nodes // 2, :], label="Cartesian FVM")
+ax.plot(X_vector, periodic_pressure[y_nodes // 2, :], label="Cartesian FVM")
 ax.plot(Xs, analytical_pressure, "--", label="Analytical 1D")
 
 
@@ -52,5 +56,10 @@ ax.set_ylabel("Dimensionless pressure")
 ax.legend()
 
 fig.savefig("verify_cartesian.png", dpi=200, bbox_inches="tight")
-plt.show()
 
+plt.ion()
+X, Y = np.meshgrid(X_vector, Y_vector)
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+surf = ax.plot_surface(X,Y,periodic_pressure, cmap="viridis",
+                       linewidth=0, antialiased=False)
+plt.show(block=False)
