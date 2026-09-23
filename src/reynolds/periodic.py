@@ -42,13 +42,11 @@ def solve(
     H_east, H_west, H_north, H_south = film.faces(H, X, Y, delta_X, delta_Y)
 
     # Coefficients for FVM formulation
-    # a_P*P_P = a_E+...+a_S+C_P
-    a_east = delta_Y / delta_X * H_east.flatten() ** 3
-    a_west = delta_Y / delta_X * H_west.flatten() ** 3
-    a_north = delta_X / delta_Y * H_north.flatten() ** 3
-    a_south = delta_X / delta_Y * H_south.flatten() ** 3
-    a_P = a_east + a_west + a_north + a_south
-    C_P = ( e[0] * delta_Y * (H_east ** k - H_west ** k) + e[1] * delta_X * (H_north ** k - H_south ** k) ).flatten()
+    # a_P*P_P = a_E+...+a_S+source
+    a_east, a_west, a_north, a_south, a_P = assembly.cartesian_coefficiants(
+        H_east, H_west, H_north, H_south, delta_X, delta_Y)
+    
+    source = assembly.build_source(H_east, H_west, H_north, H_south, delta_X, delta_Y, k, e)
 
     pinned = boundary.pin(x_nodes * y_nodes)
 
@@ -56,7 +54,7 @@ def solve(
     A = assembly.five_point(
         a_east, a_west, a_north, a_south, a_P, x_nodes, y_nodes, pinned, True)
     
-    rhs = assembly.identity_rhs(C_P, pinned)
+    rhs = assembly.identity_rhs(source, pinned)
 
     # Solving
     pressure = spsolve(A.tocsr(), rhs).reshape(y_nodes, x_nodes)

@@ -8,7 +8,7 @@ Returns the dimensionless pressure field, the X and Y grid vectors and delta_H.
 import numpy as np
 from scipy.sparse.linalg import spsolve
 
-from . import assembly, film
+from . import assembly, film, boundary
 
 
 def solve(
@@ -41,21 +41,21 @@ def solve(
 
     # Coefficients for FVM formulation
     # a_P*P_P = a_E+...+a_S+C_P
-    a_east = 1 / delta_X**2 * H_east.flatten() ** 3
-    a_west = 1 / delta_X**2 * H_west.flatten() ** 3
-    a_north = 1 / delta_Y**2 * H_north.flatten() ** 3
-    a_south = 1 / delta_Y**2 * H_south.flatten() ** 3
-    a_P = a_east + a_west + a_north + a_south
-    C_P = -((H_east - H_west) / delta_X).flatten()
-
+    a_east, a_west, a_north, a_south, a_P = assembly.cartesian_coefficiants(
+        H_east, H_west, H_north, H_south, delta_X, delta_Y)
+    
+    source = assembly.build_source(H_east, H_west, H_north, H_south, delta_X, delta_Y, k=1, e=[1,0])
+    
+    pinned = boundary.all_edges(x_nodes, y_nodes)
+    rhs = assembly.identity_rhs(source, pinned)
 
 
     # Building the system
-    A,RHS = assembly.five_point(
+    A = assembly.five_point(
         a_east, a_west, a_north, a_south, a_P, x_nodes, y_nodes,
-        False, C_P
+        pinned, periodic=False
     )
 
     # Solving
-    pressure = spsolve(A.tocsr(), C_P).reshape(y_nodes, x_nodes)
+    pressure = spsolve(A.tocsr(), rhs).reshape(y_nodes, x_nodes)
     return pressure, X_vector, Y_vector, delta_H

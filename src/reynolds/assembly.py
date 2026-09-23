@@ -42,8 +42,6 @@ def five_point(
         neighbour, exists = _neighbour(
             grid_row, grid_col, row_step, col_step, n_cols, n_rows, periodic
         )
-        print("neighbour:", neighbour)
-        print("exists:", exists)
         linked = exists & ~identity_rows
         rows.append(node[linked])
         cols.append(neighbour[linked])
@@ -59,3 +57,20 @@ def identity_rhs(C_P, identity_rows, value=0.0):
     rhs = np.asarray(C_P, dtype=float).copy()
     rhs[identity_rows] = value
     return rhs
+
+def cartesian_coefficiants(H_east, H_west, H_north, H_south, delta_x, delta_y):
+    
+    a_east = delta_y / delta_x * H_east.flatten() ** 3
+    a_west = delta_y / delta_x * H_west.flatten() ** 3
+    a_north = delta_x / delta_y * H_north.flatten() ** 3
+    a_south = delta_x / delta_y * H_south.flatten() ** 3
+    a_P = a_east + a_west + a_north + a_south
+    
+    return a_east, a_west, a_north, a_south, a_P
+
+def build_source(H_east, H_west, H_north, H_south, delta_x, delta_y, k, e):
+
+    source = ( e[0] * delta_y * (H_east ** k - H_west ** k) + e[1] * delta_x * (H_north ** k - H_south ** k) ).flatten()
+    
+    return source
+    

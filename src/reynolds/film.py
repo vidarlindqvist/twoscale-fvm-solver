@@ -38,7 +38,7 @@ def periodic(l1,l2,epsilon):
     def h(x1,x2):
         return np.sin(2*np.pi/l1*x1)*np.sin(2*np.pi/l2*x2)*epsilon+2*epsilon
     def H(x1,x2):
-        return h(x1*l2,x2*l2)/epsilon
+        return h(x1*l1,x2*l2)/epsilon
     return H
 
 
