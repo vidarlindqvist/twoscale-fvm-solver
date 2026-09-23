@@ -44,7 +44,7 @@ def solve(
     a_east, a_west, a_north, a_south, a_P = assembly.cartesian_coefficiants(
         H_east, H_west, H_north, H_south, delta_X, delta_Y)
     
-    source = assembly.build_source(H_east, H_west, H_north, H_south, delta_X, delta_Y, k=1, e=[1,0])
+    source = -assembly.build_source(H_east, H_west, H_north, H_south, delta_X, delta_Y, k=1, e=[1,0])
     
     pinned = boundary.all_edges(x_nodes, y_nodes)
     rhs = assembly.identity_rhs(source, pinned)

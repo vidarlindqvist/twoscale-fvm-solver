@@ -8,7 +8,7 @@ Returns the dimensionless pressure field, the X and Y grid vectors and delta_H.
 import numpy as np
 from scipy.sparse.linalg import spsolve
 
-from . import assembly, film, boundary
+from . import assembly, boundary, film
 
 
 def solve(
@@ -21,14 +21,14 @@ def solve(
     x_nodes=50,
     y_nodes=50,
     k=1,
-    e=[1,0],
+    e=(1,0),
     film_thickness=film.periodic,
 ):
     delta_H = delta_h / h0
 
     # Grid
-    X_vector = np.linspace(0, 1, x_nodes)
-    Y_vector = np.linspace(b / l, 0, y_nodes)
+    X_vector = np.arange(x_nodes) / x_nodes
+    Y_vector = np.arange(y_nodes) / y_nodes
     X, Y = np.meshgrid(X_vector, Y_vector)
 
     # Dimensionless increments
