@@ -72,21 +72,21 @@ def flow_factors(roughness, alpha, n=64):
     psi1 = solve_with(lu, faces, dy, "psi1")
 
     # Differences across the east and north faces, wrapping around the cell
-    dchi1_east = (np.roll(chi1, -1, axis=1) - chi1) / dy
-    dchi1_north = (np.roll(chi1, -1, axis=0) - chi1) / dy
-    dchi2_east = (np.roll(chi2, -1, axis=1) - chi2) / dy
-    dchi2_north = (np.roll(chi2, -1, axis=0) - chi2) / dy
-    dpsi1_east = (np.roll(psi1, -1, axis=1) - psi1) / dy
-    dpsi1_north = (np.roll(psi1, -1, axis=0) - psi1) / dy
+    dchi1_y1 = (np.roll(chi1, -1, axis=1) - np.roll(chi1, 1, axis=1)) / (2 * dy)
+    dchi1_y2 = (np.roll(chi1, -1, axis=0) - np.roll(chi1, 1, axis=0)) / (2 * dy)
+    dchi2_y1 = (np.roll(chi2, -1, axis=1) - np.roll(chi2, 1, axis=1)) / (2 * dy)
+    dchi2_y2 = (np.roll(chi2, -1, axis=0) - np.roll(chi2, 1, axis=0)) / (2 * dy)
+    dpsi1_y1 = (np.roll(psi1, -1, axis=1) - np.roll(psi1, 1, axis=1)) / (2 * dy)
+    dpsi1_y2 = (np.roll(psi1, -1, axis=0) - np.roll(psi1, 1, axis=0)) / (2 * dy)
 
     # Cell averages of the face fluxes
-    phi_x = np.mean(H_east**3 * (1 + dchi1_east))
-    phi_y = np.mean(H_north**3 * (1 + dchi2_north))
-    phi_s = np.mean(H_east - H_east**3 * dpsi1_east)
+    phi_x = np.mean(H_east**3 * (1 + dchi1_y1))
+    phi_y = np.mean(H_north**3 * (1 + dchi2_y2))
+    phi_s = np.mean(H_east - H_east**3 * dpsi1_y1)
 
     # Cross terms
-    phi_xy = np.mean(H_east**3 * dchi2_east)
-    phi_yx = np.mean(H_north**3 * dchi1_north)
-    phi_sy = -np.mean(H_north**3 * dpsi1_north)
+    phi_xy = np.mean(H_east**3 * dchi2_y1)
+    phi_yx = np.mean(H_north**3 * dchi1_y2)
+    phi_sy = -np.mean(H_north**3 * dpsi1_y2)
 
     return phi_x, phi_y, phi_s, phi_xy, phi_yx, phi_sy

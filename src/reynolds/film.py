@@ -34,7 +34,7 @@ def bisinusoidal(amplitude):
     return H_r
 
 
-def faces(H, first, second, d_first, d_second):
+def faces(*H, first, second, d_first, d_second):
     return (
         H(first + d_first / 2, second),
         H(first - d_first / 2, second),
