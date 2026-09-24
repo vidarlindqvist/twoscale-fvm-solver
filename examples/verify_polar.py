@@ -11,16 +11,16 @@ from reynolds import cartesian, polar
 
 Ri = 299e-3
 Ro = 300e-3
-h0 = 20e-6
-delta_h = 5e-6
+h_min = 20e-6
+h_taper = 5e-6
 n_sliding = 50
 n_span = 50
 
-cartesian_pressure, X_vector, Y_vector, delta_H = cartesian.solve(
-    l=1.0,
-    b=1.0,
-    delta_h=delta_h,
-    h0=h0,
+cartesian_pressure, X_vector, Y_vector, H_taper = cartesian.solve(
+    length=1.0,
+    width=1.0,
+    h_taper=h_taper,
+    h_min=h_min,
     x_nodes=n_sliding,
     y_nodes=n_span,
 )
@@ -28,15 +28,17 @@ cartesian_pressure, X_vector, Y_vector, delta_H = cartesian.solve(
 polar_pressure, R_vector, theta_vector, theta2 = polar.solve(
     Ri=Ri,
     Ro=Ro,
-    h0=h0,
-    delta_h=delta_h,
+    h_min=h_min,
+    h_taper=h_taper,
     r_nodes=n_span,
     theta_nodes=n_sliding,
     theta1=0,
     theta2=(Ro - Ri) / Ri,
 )
 
-polar_scale = Ro / (Ro - Ri)
+# Pressure scales: omega * Ro**2 for polar, u_s * length for cartesian, with
+# length = Ro - Ri and the pad sliding at u_s = omega * r, about omega * R_mean.
+polar_scale = Ro**2 / ((Ri + Ro) / 2 * (Ro - Ri))
 polar_matched = polar_pressure.T * polar_scale
 
 difference = cartesian_pressure - polar_matched
