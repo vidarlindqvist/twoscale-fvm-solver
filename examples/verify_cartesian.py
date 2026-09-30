@@ -1,8 +1,4 @@
-"""Verification of the cartesian FVM solution against the analytical one.
-
-Solves a high aspect ratio pad where side leakage is negligible.
-Prints the aspect ratio and the relative RMS error, and saves verify_cartesian.png.
-"""
+"""Cartesian solver against the 1D analytical solution, on a wide pad with little side leakage."""
 
 import matplotlib.pyplot as plt
 import numpy as np

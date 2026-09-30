@@ -71,8 +71,6 @@ def cartesian_coefficients(K_east, K_west, K_north, K_south, dX, dY):
 
 
 def build_source(Q_east, Q_west, Q_north, Q_south, dX, dY, e=(1, 0)):
-    source = (
-        e[0] * dY * (Q_east - Q_west) + e[1] * dX * (Q_north - Q_south)
-    ).flatten()
+    source = (e[0] * dY * (Q_east - Q_west) + e[1] * dX * (Q_north - Q_south)).flatten()
 
     return source

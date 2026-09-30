@@ -1,8 +1,4 @@
-"""Verification of the polar FVM solution against the cartesian one.
-
-Solves both on matched near-square domains and compares them node by node.
-Prints the pad aspect ratio and the relative RMS error, and saves verify_polar.png.
-"""
+"""Polar solver against the cartesian one, on a thin annulus that is almost a square pad."""
 
 import matplotlib.pyplot as plt
 import numpy as np

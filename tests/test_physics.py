@@ -1,9 +1,4 @@
-"""Physics invariants that must hold regardless of geometry or discretisation.
-
-Takes no inputs of its own, each test drives the solvers or the film definitions
-directly.
-Fails if the wedge, the boundary condition or the film taper stops behaving.
-"""
+"""Physics that must hold for both pad solvers, whatever the grid."""
 
 import numpy as np
 import pytest
@@ -17,8 +12,7 @@ SOLVERS = {
 
 
 def flat_film(*geometry):
-    """A film of uniform thickness, ignoring whatever geometry it is given."""
-
+    # Uniform film, whatever geometry it is given
     def H(first, second):
         return np.ones_like(first * second)
 

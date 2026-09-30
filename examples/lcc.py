@@ -1,8 +1,4 @@
-"""Load carrying capacity of the hydropower thrust bearing from Table 1.
-
-Takes the bearing geometry, the lubricant viscosity and the target load.
-Prints the dimensionless LCC and the shaft speed needed to reach that load.
-"""
+"""Load carrying capacity of the thrust bearing in Table 1, and the shaft speed for 650 kN."""
 
 import numpy as np
 

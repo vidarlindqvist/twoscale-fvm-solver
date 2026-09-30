@@ -1,13 +1,4 @@
-"""Structural checks on the assembled matrix.
-
-Takes no inputs of its own, each test assembles a small matrix directly.
-Fails if a node gets connected to the wrong neighbour, or if a boundary row is
-not reduced to the identity.
-
-The links are checked with no boundary nodes at all. With the usual Dirichlet
-edges the edge rows carry no links anyway, so a wrong link there would be masked
-away before a test could see it.
-"""
+"""Structure of the five point matrix, on a small grid of unit coefficients."""
 
 import numpy as np
 from scipy.sparse import csr_array
@@ -19,15 +10,14 @@ SIZE = N_COLS * N_ROWS
 
 
 def unit_coefficients():
-    """Five arrays of ones, so the structure is visible without coefficient noise."""
     ones = np.ones(SIZE)
     return ones.copy(), ones.copy(), ones.copy(), ones.copy(), 4 * ones.copy()
 
 
 def test_east_west_links_never_cross_grid_rows():
-    """Nodes are numbered row major, so node p and node p + 1 are neighbours in
-    the numbering even when p sits in the last column, where they are really on
-    opposite edges of the grid. Those two must not end up linked."""
+    # Row major numbering: the last node in a row is followed by the first
+    # node of the next row, which is not a neighbour. No fixed nodes here,
+    # since fixed rows have no links and would hide a wrong one.
     a_east, a_west, a_north, a_south, a_P = unit_coefficients()
     no_boundary = np.zeros(SIZE, dtype=bool)
 
@@ -45,18 +35,16 @@ def test_east_west_links_never_cross_grid_rows():
 
 
 def test_boundary_rows_are_emitted_as_identity():
-    """A boundary row must read pressure * 1 = 0, so it carries the diagonal and
-    nothing else."""
     a_east, a_west, a_north, a_south, a_P = unit_coefficients()
-    is_boundary = boundary.all_edges(N_COLS, N_ROWS)
-    a_P[is_boundary] = 1.0
+    fixed = boundary.all_edges(N_COLS, N_ROWS)
+    a_P[fixed] = 1.0
 
     A = csr_array(
         assembly.five_point(
-            a_east, a_west, a_north, a_south, a_P, N_COLS, N_ROWS, is_boundary
+            a_east, a_west, a_north, a_south, a_P, N_COLS, N_ROWS, fixed
         )
     )
 
-    for node in np.flatnonzero(is_boundary):
+    for node in np.flatnonzero(fixed):
         assert A[[node]].nnz == 1
         assert A[node, node] == 1.0

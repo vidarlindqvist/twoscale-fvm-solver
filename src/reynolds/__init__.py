@@ -1,1 +1,1 @@
-"""Reynolds equation solvers for tilted pad bearings in cartesian and polar coordinates."""
+"""Reynolds equation solvers for tilted pad bearings, smooth and homogenised."""
