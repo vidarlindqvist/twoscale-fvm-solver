@@ -101,9 +101,11 @@ def table(roughness, alphas, n=64):
 
     def interpolant(column):
         spline = CubicSpline(alphas, values[:, column])
-
+        
+        
         def phi(H):
-            if H.min() < alphas[0] or H.max() > alphas[-1]:
+            tol = 1e-3 # Accounts for floating point precission 
+            if H.min() < alphas[0] - tol or H.max() > alphas[-1] + tol:
                 raise ValueError(
                     f"film thickness {H.min():.3f} to {H.max():.3f} is outside "
                     f"the table, alpha {alphas[0]} to {alphas[-1]}"
