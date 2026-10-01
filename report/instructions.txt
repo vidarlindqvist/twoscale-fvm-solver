@@ -1,0 +1,242 @@
+HOW TO WRITE THE REPORT IN TYPST
+================================
+
+Typst is a typesetting language like LaTeX, but it compiles in milliseconds,
+has readable error messages and needs no packages for the basics. This folder
+holds an LTU-style report template (TVM department) for the
+twoscale-fvm-solver project.
+
+
+1. SETUP
+--------
+
+Install Typst (one of):
+    pacman -S typst          (Arch)
+    brew install typst       (macOS)
+    winget install Typst.Typst   (Windows)
+    cargo install typst-cli  (anywhere)
+
+Editor: use VS Code with the "Tinymist" extension. It gives a live preview,
+autocompletion, jump-to-error and click-in-preview-to-jump-to-source.
+
+Build from the repository root:
+    typst compile report/main.typ    -> report/main.pdf
+    typst watch report/main.typ      -> rebuilds on every save
+
+The default fonts (New Computer Modern) ship with Typst, so nothing else needs
+installing.
+
+
+2. FILES
+--------
+
+    ltu.typ               The style. You should almost never need to edit it.
+    main.typ              The report itself. This is where you write.
+    refs.bib              References, in ordinary BibTeX format.
+    figures/              Images. ltu-logo.jpg is the LTU logo.
+    instructions.txt      This file.
+
+
+3. HOW THE TEMPLATE WORKS
+-------------------------
+
+ltu.typ defines a single function, `report`. The first lines of main.typ
+apply it to the whole document:
+
+    #import "ltu.typ": report
+    #show: report.with(
+      title: [Two-Scale Finite Volume Solver \ for Mixed Lubrication],
+      author: "Name One and Name Two",
+      email: "abc@student.ltu.se",
+      abstract: [ ... ],
+      notation: (
+        ($H$, [Dimensionless film thickness]),
+        ($P$, [Dimensionless pressure]),
+      ),
+    )
+
+Every argument is optional:
+
+    title        Title page heading. `\` forces a line break.
+    author       Author name(s), as a string.
+    email        Printed in monospace under the author.
+    department   Defaults to "Department of Engineering Sciences and Mathematics".
+    date         Defaults to today. Fixed date: datetime(year: 2026, month: 10, day: 1)
+    cover        Optional image on the title page, e.g. image("figures/cover.svg", width: 60%)
+    logo         The LTU logo. Rarely changed.
+    abstract     Abstract text.
+    notation     List of (symbol, description) pairs. Leave it out to drop the page.
+
+From these the template builds:
+    - a title page without a page number
+    - Abstract, Contents and Notation with roman page numbers (i, ii, iii)
+    - the main text with arabic page numbers starting at 1
+    - each top-level section (=) on a new page, numbered 1, 1.1, 1.1.1
+    - numbered equations (1), figures and tables
+    - an IEEE-style numbered reference list, ordered by first citation
+
+Everything after the `#show:` line in main.typ is the report body.
+
+
+4. TYPST CHEAT SHEET
+--------------------
+
+Structure
+    = Section                     (new page, numbered 1)
+    == Subsection                 (1.1)
+    === Subsubsection             (1.1.1)
+    Blank line                    = new paragraph
+    *bold*  _italic_  `code`
+    - bullet list
+    + numbered list
+    // comment
+    ~                             non-breaking space, e.g. 100~kg, Figure~1
+
+Labels and references (works for sections, equations, figures and tables)
+    = Theory <sec:theory>
+    As shown in @sec:theory ...       -> "Section 2"
+    @eq:reynolds                      -> "(1)"
+    @fig:pressure                     -> "Figure 1"
+    @tab:load                         -> "Table 1"
+
+    Use the prefixes sec:, eq:, fig:, tab: so labels stay unambiguous.
+
+Citations
+    Add the entry to refs.bib, then write @patir1978 in the text -> [1].
+    Several sources: @patir1978 @hamrock2004.
+    Only cited entries appear in the reference list.
+
+Math
+    Inline:   $H = h / h_"min"$
+    Display:  put spaces or a newline just inside the dollar signs:
+        $
+          (partial P) / (partial X) = 0
+        $ <eq:label>
+
+    Typst math differs from LaTeX:
+        x^2, x_i, x_"text"        superscript, subscript, upright subscript
+        (a) / (b)                 fraction (a / b on its own also works)
+        partial, nabla, alpha, phi, epsilon     no backslash
+        bold(z), upright(T)       vectors, transpose
+        mat(1, w_1; 1, w_2)       matrix: comma between columns, ; between rows
+        vec(z_1, z_2)             column vector
+        sum_(i=1)^n, integral_0^1
+        "text"                    plain words inside math
+    Reference: https://typst.app/docs/reference/math/
+
+Figures
+    #figure(
+      image("figures/pressure.svg", width: 70%),
+      caption: [Dimensionless pressure $P$ on the pad.],
+    ) <fig:pressure>
+
+    Two figures side by side:
+    #figure(
+      grid(columns: 2, gutter: 1em,
+        image("figures/a.svg"), image("figures/b.svg")),
+      caption: [Raw data (left) and log-log data (right).],
+    ) <fig:data>
+
+Tables (the caption goes above automatically)
+    #figure(
+      table(
+        columns: 3,
+        table.hline(),
+        [$X$], [$P$], [$H$],
+        table.hline(stroke: 0.5pt),
+        [0.0], [0.00], [2.0],
+        table.hline(),
+      ),
+      caption: [Pressure along the centre line.],
+    ) <tab:centre>
+
+Footnotes
+    text#footnote[The footnote text.]
+
+
+5. FIGURES FROM PYTHON
+----------------------
+
+Save matplotlib plots as SVG so they stay sharp and the text is searchable:
+
+    fig.savefig("report/figures/pressure.svg", bbox_inches="tight")
+
+To match the report font, add this at the top of the plotting script:
+
+    import matplotlib.pyplot as plt
+    plt.rcParams.update({"font.family": "serif", "mathtext.fontset": "cm",
+                         "font.size": 10})
+
+Size the figure to its final width, e.g. figsize=(6.3, 3.5) inches for a full
+text width (17 cm), so the plot's font size matches the text. Don't scale a
+huge figure down. Keep the plotting scripts in examples/ (or a scripts/ folder)
+so every figure can be regenerated from code.
+
+
+6. WORKING TOGETHER
+-------------------
+
+Option A: git (recommended, since the code is already in git)
+    - Commit main.typ, ltu.typ, refs.bib and figures/. Don't commit main.pdf,
+      because it is a build output and causes merge conflicts.
+    - Write one sentence per line. Typst ignores single line breaks, so the
+      PDF looks the same, but git diffs and merges become line-by-line
+      instead of paragraph-by-paragraph.
+    - Once the report grows, split it into one file per section so you rarely
+      edit the same file at the same time:
+          report/sections/theory.typ
+          report/sections/results.typ
+      and in main.typ write:
+          #include "sections/theory.typ"
+          #include "sections/results.typ"
+      Each section file starts with its own `= Heading`. Labels and citations
+      work across files.
+    - Agree on who owns which section. Pull before you start, commit small and
+      often, and push when you stop.
+
+Option B: typst.app
+    The web editor allows real-time co-editing like Overleaf. Upload the
+    report/ folder into a project and share it. The drawback is keeping it in
+    sync with the repository by hand.
+
+
+7. LTU REPORT CONVENTIONS (from the original template)
+------------------------------------------------------
+
+    - Title: 4-12 words, descriptive, no formulas, abbreviations or symbols.
+    - Abstract: stands on its own; problem, method, main results and their
+      implications; 150-200 words; no figures, references or formulas.
+    - Sections: Introduction, Theory, Method, Results, Discussion and
+      Conclusions, References. Use at most three heading levels.
+    - If a section has subsections, it has at least two.
+    - Number every equation, figure and table, and refer to each one in the
+      text by its number ("Figure 2"), never as "the figure below".
+    - Equations are part of the sentence: punctuate them with commas and
+      periods.
+    - Scalars in italic (x, y), vectors and matrices in bold (bold(z), bold(A)).
+    - Put a space between a number and its unit (9.82 m/s^2, 100 kg), except
+      for % and degrees (20%, 90°). Label plot axes with quantity and unit,
+      e.g. "t (s)".
+    - Captions are short and say what is shown. Figures that aren't your own
+      need a source and permission.
+    - Every reference must be cited in the text. Use original sources and avoid
+      web pages; if you must cite one, include the date you accessed it.
+    - Introduction: background, previous work, aim, research questions and
+      limitations. Conclusions: answer the aim, discuss sources of error and
+      suggest future work.
+
+
+8. COMMON ERRORS
+----------------
+
+    "unknown variable: xy"   Letters next to each other in math are read as one
+                             name. Write x y (with a space) or "xy" (as text).
+    "unknown variable: diff" Use partial. Typst renamed it.
+    "label does not exist"   Typo in @label, or the label was never attached.
+    "file not found"         Image paths are relative to the .typ file that
+                             contains the image() call.
+    Figure ended up on       Typst places figures where you write them. To let
+    another page             one float, use #figure(..., placement: auto).
+
+Docs: https://typst.app/docs
+For LaTeX users: https://typst.app/docs/guides/guide-for-latex-users/

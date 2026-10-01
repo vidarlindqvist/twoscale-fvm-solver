@@ -5,3 +5,5 @@ __pycache__/
 .ruff_cache/
 *.png
 build/
+!report/figures/*.png
+report/main.pdf

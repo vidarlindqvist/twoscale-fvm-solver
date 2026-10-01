@@ -16,7 +16,7 @@ from scipy.sparse.linalg import splu
 
 from . import assembly, boundary, film
 
-# Power of H in the source term, its direction and its sign, from (5.315)
+# Power of H in the source term, its direction and its sign.
 CELL_PROBLEMS = {
     "psi1": (1, (1, 0), -1),
     "psi2": (1, (0, 1), -1),
