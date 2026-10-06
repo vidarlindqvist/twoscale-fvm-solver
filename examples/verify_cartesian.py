@@ -9,11 +9,11 @@ length = 148e-3
 width = 500e-3
 h_taper = 5e-6
 h_min = 20e-6
-x_nodes = 5
-y_nodes = 5
+x_nodes = 64
+y_nodes = 64
 
 
-cartesian_pressure, X_vector, Y_vector, H_taper = cartesian.solve(
+cartesian_pressure, X_vector, Y_vector = cartesian.solve(
     length=length,
     width=width,
     h_taper=h_taper,
@@ -22,6 +22,7 @@ cartesian_pressure, X_vector, Y_vector, H_taper = cartesian.solve(
     y_nodes=y_nodes,
 )
 
+H_taper = h_taper / h_min
 
 Xs = np.linspace(0, 1, x_nodes)
 analytical_pressure = analytical.pressure_1D(Xs, H_taper)

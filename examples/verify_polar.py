@@ -5,20 +5,21 @@ import numpy as np
 
 from reynolds import cartesian, polar
 
-Ri = 299e-3
+Ri = 250e-3
 Ro = 300e-3
 h_min = 20e-6
 h_taper = 5e-6
 n_sliding = 50
 n_span = 50
+H_taper = h_taper / h_min
 
-cartesian_pressure, X_vector, Y_vector, H_taper = cartesian.solve(
+cartesian_pressure, X1_vector, X2_vector = cartesian.solve(
     length=1.0,
     width=1.0,
     h_taper=h_taper,
     h_min=h_min,
-    x_nodes=n_sliding,
-    y_nodes=n_span,
+    x1_nodes=n_sliding,
+    x2_nodes=n_span,
 )
 
 polar_pressure, R_vector, theta_vector, theta2 = polar.solve(
@@ -45,7 +46,7 @@ print(f"polar aspect ratio   {aspect_ratio:.4f}")
 print(f"relative RMS error   {rms_error:.3e}")
 
 fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(X_vector, cartesian_pressure[n_span // 2, :], label="Cartesian FVM")
+ax.plot(X1_vector, cartesian_pressure[n_span // 2, :], label="Cartesian FVM")
 ax.plot(
     theta_vector / theta2,
     polar_matched[n_span // 2, :],

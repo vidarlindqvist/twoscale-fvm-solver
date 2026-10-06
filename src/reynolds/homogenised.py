@@ -45,7 +45,8 @@ def solve_cell(roughness, alpha, problems=("chi1", "chi2", "psi1"), n=64):
     )
 
     # With periodic boundaries the solution is only defined up to a constant,
-    # so one node is fixed to zero. The matrix is the same for every problem.
+    # so one node is fixed to zero. The matrix is the same for every problem
+    # so LU-decomposition is used
     fixed = boundary.pin(n * n)
     A = assembly.five_point(
         a_east, a_west, a_north, a_south, a_P, n, n, fixed, periodic=True
@@ -101,9 +102,10 @@ def table(roughness, alphas, n=64):
 
     def interpolant(column):
         spline = CubicSpline(alphas, values[:, column])
-
         def phi(H):
-            if H.min() < alphas[0] or H.max() > alphas[-1]:
+            tol = 3
+            # Rounding is used to eliminate numerical errors
+            if round( alphas[0] - H.min(), tol) < 0 or round(H.max() - alphas[-1], tol) < 0 :
                 raise ValueError(
                     f"film thickness {H.min():.3f} to {H.max():.3f} is outside "
                     f"the table, alpha {alphas[0]} to {alphas[-1]}"
