@@ -9,10 +9,10 @@ import numpy as np
 
 from reynolds import cartesian, film, homogenised, load
 
-roughness = film.bisinusoidal(-0.3)
+roughness = film.bisinusoidal(-0.2)
 alphas = np.linspace(0.9, 1.4, 32)
 nodes_per_wavelength = 20
-epsilons = [1 / 1, 1 / 2, 1 / 4, 1 / 8, 1 / 16]
+epsilons = [ 1 / 1, 1 / 2, 1 / 4, 1 / 8]
 
 pad = {"length": 1.0, "width": 1.0, "h_taper": 5e-6, "h_min": 20e-6}
 
