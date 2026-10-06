@@ -9,13 +9,12 @@ import numpy as np
 
 from reynolds import cartesian, film, homogenised, load
 
-roughness = film.bisinusoidal(0.04)
-
+roughness = film.bisinusoidal(-0.3)
+alphas = np.linspace(0.9, 1.4, 32)
 nodes_per_wavelength = 20
-epsilons = [1 / 1, 1 / 2, 1 / 4, 1 / 8, 1 / 16,]
+epsilons = [1 / 1, 1 / 2, 1 / 4, 1 / 8, 1 / 16]
 
 pad = {"length": 1.0, "width": 1.0, "h_taper": 5e-6, "h_min": 20e-6}
-alphas = np.linspace(1, (pad["h_taper"]+pad["h_min"]) / pad["h_min"], 32)
 
 # Smooth pad, for reference
 P_smooth, X_vector, Y_vector, _ = cartesian.solve(**pad, x_nodes=321, y_nodes=321)
@@ -28,10 +27,9 @@ P_0, X_vector, Y_vector, _ = cartesian.solve(
 )
 load_0 = load.cartesian(P_0, X_vector, Y_vector)
 print(f"homogenised    load {load_0:.6f}")
-print(f"Load ratio: {load_0 / load.cartesian(P_smooth, X_vector, Y_vector)}")
 
 fig, ax = plt.subplots(figsize=(8, 5))
-ax.plot(X_vector, P_smooth[len(Y_vector) // 2, :], "--", label="smooth")
+ax.plot(X_vector, P_smooth[160, :], "--", label="smooth")
 ax.plot(X_vector, P_0[len(Y_vector) // 2, :])
 # Resolved rough pad, with the same number of nodes per bump each time
 for epsilon in epsilons:
