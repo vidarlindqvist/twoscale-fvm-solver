@@ -60,17 +60,27 @@ def identity_rhs(source, fixed, value=0.0):
     return rhs
 
 
-def cartesian_coefficients(K_east, K_west, K_north, K_south, dX, dY):
-    a_east = dY / dX * K_east.flatten()
-    a_west = dY / dX * K_west.flatten()
-    a_north = dX / dY * K_north.flatten()
-    a_south = dX / dY * K_south.flatten()
+def cartesian_coefficients(K_east, K_west, K_north, K_south, dX1, dX2):
+    a_east = dX2 / dX1 * K_east.flatten()
+    a_west = dX2 / dX1 * K_west.flatten()
+    a_north = dX1 / dX2 * K_north.flatten()
+    a_south = dX1 / dX2 * K_south.flatten()
     a_P = a_east + a_west + a_north + a_south
 
     return a_east, a_west, a_north, a_south, a_P
 
 
-def build_source(Q_east, Q_west, Q_north, Q_south, dX, dY, e=(1, 0)):
-    source = (e[0] * dY * (Q_east - Q_west) + e[1] * dX * (Q_north - Q_south)).flatten()
+def build_source(Q_east, Q_west, Q_north, Q_south, dX1, dX2, e=(1, 0)):
+    source = (e[0] * dX2 * (Q_east - Q_west) + e[1] * dX1 * (Q_north - Q_south)).flatten()
 
     return source
+
+def cavitation_coefficiens(H_east, H_west, dX2):
+    b_east = dX2 / 2 * H_east
+    b_west = - dX2 / 2 * H_west
+    b_P = b_east + b_west
+    
+    return b_west, b_east, b_P
+
+
+

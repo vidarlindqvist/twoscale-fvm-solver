@@ -42,7 +42,8 @@ def solve(
 
     # Height at intermediate points
     H_east, H_west, H_north, H_south = film.faces(H, X1, X2, dX1, dX2)
-
+    # print(H_east)
+    
     # Coefficients for FVM formulation
     # a_P*P_P = a_E*P_E+...+a_S*P_S+source
     a_east, a_west, a_north, a_south, a_P = assembly.cartesian_coefficients(

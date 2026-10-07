@@ -9,8 +9,8 @@ length = 148e-3
 width = 500e-3
 h_taper = 5e-6
 h_min = 20e-6
-x_nodes = 64
-y_nodes = 64
+x1_nodes = 64
+x2_nodes = 64
 
 
 cartesian_pressure, X_vector, Y_vector = cartesian.solve(
@@ -18,16 +18,16 @@ cartesian_pressure, X_vector, Y_vector = cartesian.solve(
     width=width,
     h_taper=h_taper,
     h_min=h_min,
-    x_nodes=x_nodes,
-    y_nodes=y_nodes,
+    x1_nodes=x1_nodes,
+    x2_nodes=x2_nodes,
 )
 
 H_taper = h_taper / h_min
 
-Xs = np.linspace(0, 1, x_nodes)
+Xs = np.linspace(0, 1, x1_nodes)
 analytical_pressure = analytical.pressure_1D(Xs, H_taper)
 
-difference = cartesian_pressure[y_nodes // 2, :] - analytical_pressure
+difference = cartesian_pressure[x2_nodes // 2, :] - analytical_pressure
 rms_error = np.sqrt(np.mean(difference**2)) / np.sqrt(np.mean(cartesian_pressure**2))
 
 print(f"Cartesian aspect ratio   {length / width:.4f}")
@@ -40,7 +40,7 @@ bbox = {"boxstyle": "round", "facecolor": "white", "alpha": 0.8}
 ax.text(
     0.80, 0.85, text_str, transform=ax.transAxes, verticalalignment="top", bbox=bbox
 )
-ax.plot(X_vector, cartesian_pressure[y_nodes // 2, :], label="Cartesian FVM")
+ax.plot(X_vector, cartesian_pressure[x2_nodes // 2, :], label="Cartesian FVM")
 ax.plot(Xs, analytical_pressure, "--", label="Analytical 1D")
 
 
