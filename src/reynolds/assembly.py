@@ -75,9 +75,9 @@ def build_source(Q_east, Q_west, Q_north, Q_south, dX1, dX2, e=(1, 0)):
 
     return source
 
-def cavitation_coefficiens(H_east, H_west, dX2):
-    b_east = dX2 / 2 * H_east
-    b_west = - dX2 / 2 * H_west
+def cavitation_coefficients(H_east, H_west, dX2):
+    b_east = dX2 / 2 * H_east.flatten()
+    b_west = - dX2 / 2 * H_west.flatten()
     b_P = b_east + b_west
     
     return b_west, b_east, b_P
