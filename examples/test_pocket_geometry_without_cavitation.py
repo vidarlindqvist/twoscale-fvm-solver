@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.sparse import diags_array
 
 from scipy.sparse.linalg import spsolve
 from reynolds import cartesian, film, assembly, boundary
@@ -38,30 +39,6 @@ cavitation_pressure, X1_vector, X2_vector = cartesian.solve(
 )
 
 
-print(f"Cartesian aspect ratio   {length / width:.4f}")
-
-fig, ax = plt.subplots(figsize=(10, 6))
-bbox = {"boxstyle": "round", "facecolor": "white", "alpha": 0.8}
-
-ax.plot(X1_vector, cavitation_pressure[x2_nodes // 2, :], label="Cartesian FVM")
-
-
-ax.set_xlabel("Dimensionless sliding direction")
-ax.set_ylabel("Dimensionless pressure")
-ax.legend()
-
-fig.savefig("verify_cartesian.png", dpi=200, bbox_inches="tight")
-plt.show()
-
-# film_thickness = film.step
-# H_east, H_west, H_north, H_south = film.faces(
-#     film_thickness(H_min,H_max,a,b),
-#     X1,
-#     X2,
-#     dX1,
-#     dX2
-#     )
-
 fixed = boundary.all_edges(x1_nodes, x2_nodes)
 
 
@@ -87,15 +64,18 @@ A = assembly.five_point(
     )
 
 
-b_east, b_west, b_P = assembly.cavitation_coefficients(
-    H_east,
-    H_west,
-    dX2
-    )
+# b_east, b_west, b_P = assembly.cavitation_coefficients(
+#     H_east,
+#     H_west,
+#     dX2
+#     )
+
+
+b_P = H_east.flatten()
+b_west = H_west.flatten() * dX2
+b_east = np.zeros_like(b_west) * dX2
 b_north = np.zeros_like(b_west)
 b_south = np.zeros_like(b_west)
-
-
 
 
 B = assembly.five_point(
@@ -120,13 +100,39 @@ source = assembly.build_source(
     (1,0)
     )
     
-rhs = assembly.identity_rhs(source, fixed)
+rhs = -assembly.identity_rhs(source, fixed)
 
 pressure = spsolve(A.tocsr(), rhs).reshape(x2_nodes, x1_nodes)
+cavitation = spsolve(B.tocsr(), rhs).reshape(x2_nodes, x1_nodes)
 
-compare = pressure.flatten() < 0
+max_it = 100
+is_cavitated = np.array(pressure.flatten() < 0)
+is_cavitated = is_cavitated.astype(float)
+test= np.array(is_cavitated)
+test = test.astype(float)
 
-A[compare,compare] = B[compare,compare]
 
+for k in range(1,max_it+1):
+
+    M = A @ diags_array(np.ones_like(is_cavitated)-is_cavitated) - B @ diags_array(is_cavitated)
+    z = spsolve(M.tocsr(), rhs).reshape(x2_nodes, x1_nodes)
+    comparison = np.array(z.flatten() < 0)
+    is_cavitated += comparison.astype(float)
+    test += comparison.astype(float)
+    is_cavitated = np.mod(is_cavitated, 2)
+    
+print(test)
+
+
+fig, ax = plt.subplots(figsize=(10, 6))
+bbox = {"boxstyle": "round", "facecolor": "white", "alpha": 0.8}
+
+ax.plot(X1_vector, z[x2_nodes // 2, :], label="Cartesian FVM")
+
+
+ax.set_xlabel("Dimensionless sliding direction")
+ax.set_ylabel("Dimensionless pressure")
+ax.legend()
+plt.show()
 
 

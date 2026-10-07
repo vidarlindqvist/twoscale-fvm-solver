@@ -80,7 +80,7 @@ def cavitation_coefficients(H_east, H_west, dX2):
     b_west = - dX2 / 2 * H_west.flatten()
     b_P = b_east + b_west
     
-    return b_west, b_east, b_P
+    return b_east, b_west, b_P
 
 
 
