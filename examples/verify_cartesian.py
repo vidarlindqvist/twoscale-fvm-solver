@@ -9,8 +9,8 @@ length = 148e-3
 width = 500e-3
 h_taper = 5e-6
 h_min = 20e-6
-x1_nodes = 64
-x2_nodes = 64
+x1_nodes = 164
+x2_nodes = 164
 
 
 cartesian_pressure, X_vector, Y_vector = cartesian.solve(

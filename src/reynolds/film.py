@@ -3,15 +3,12 @@
 import numpy as np
 
 
-
-
-
-def step(H_max, H_min, a, b):
+def pocket(H_max, H_min, a, b):
 # Step function
     def film_thickness(*geometry):
         def H(X1, X2):
-            return np.where((X1 >= a) & (X1 <= b), H_max, H_min) + 0 *X2
-        return H
+            return np.where((X1 >= a) & (X1 <= b), H_min, H_max) + 0 *X2
+        return H 
     return film_thickness
         
         
