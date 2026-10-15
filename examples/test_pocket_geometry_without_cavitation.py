@@ -10,12 +10,13 @@ length = 20e-3
 width = 500e-3
 H_min = 1
 H_max = 10
-x1_nodes = 64
-x2_nodes = 64
-a=0.1
-b=0.2
+x1_nodes = 16
+x2_nodes = 16
+a=0.3
+b=0.6
 h_taper=5e-6
 h_min = 20e-6
+cavitation_pressure = -0.0005
 
 dX2 = (width / length) / (x2_nodes - 1)
 dX1 = 1 / (x1_nodes - 1)
@@ -92,7 +93,7 @@ def newton_iteration(A_sparse, B_sparse, f, max_iter=300, tol=1e-8):
     n = A_sparse.shape[0]
     z = np.ones(2 * n)  # Initial guess [x; y]
     
-    def fischer_burmeister_and_derivative(a, b, eps=1e-12):
+    def fischer_burmeister_and_derivative(a, b, eps=1e-12): 
         denom = np.sqrt(a**2 + b**2 + eps)
         fb = denom - a - b
         # Derivatives
@@ -135,7 +136,7 @@ def newton_iteration(A_sparse, B_sparse, f, max_iter=300, tol=1e-8):
     y_sol = np.maximum(0, z[n:])
     return x_sol, y_sol
 
-pressure, cavitation = newton_iteration(A, B, rhs)
+pressure, cavitation = newton_iteration(A, B, rhs - A @ (cavitation_pressure*np.ones(x1_nodes*x2_nodes)))
 
 
 
@@ -158,8 +159,8 @@ pressure, cavitation = newton_iteration(A, B, rhs)
 #     test += comparison.astype(float)
 #     is_cavitated = np.mod(is_cavitated, 2)
     
-# print(test)
-pressure = pressure.reshape(x2_nodes, x1_nodes)
+# print(test)+cavitation_pressure
+pressure = pressure.reshape(x2_nodes, x1_nodes)+cavitation_pressure
 cavitation = cavitation.reshape(x2_nodes, x1_nodes)
 
 fig, ax = plt.subplots(figsize=(10, 6))
