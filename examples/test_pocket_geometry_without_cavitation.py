@@ -10,13 +10,16 @@ length = 20e-3
 width = 500e-3
 H_min = 1
 H_max = 10
-x1_nodes = 16
-x2_nodes = 16
-a=0.3
-b=0.6
+x1_nodes = 64
+x2_nodes = 64
+a=0.1
+b=0.25
 h_taper=5e-6
 h_min = 20e-6
-cavitation_pressure = -0.0005
+cavitation_pressure = -1e5 / 1.2e9 # (p_c - p_in) / (6 mu U l / h0^2)
+mu = 0.01
+bulk_modulus = 1e8
+
 
 dX2 = (width / length) / (x2_nodes - 1)
 dX1 = 1 / (x1_nodes - 1)
@@ -44,6 +47,14 @@ a_east, a_west, a_north, a_south, a_P = assembly.cartesian_coefficients(
     dX2
     )
 
+U=1
+H_P = H(X1, X2).flatten()
+c = bulk_modulus * h_min ** 2 / ( 6 * mu * length * U) 
+a_P = c * a_P - 1 / 2 * (H_west - H_east).flatten()
+a_west += 1 / 2 * H_west.flatten()
+a_east -= 1 / 2 * H_east.flatten()
+
+
 A = assembly.five_point(
     a_east,
     a_west,
@@ -58,8 +69,8 @@ A = assembly.five_point(
 
 
 b_P = H_east.flatten()
-b_west = H_west.flatten() * dX2
-b_east = np.zeros_like(b_west) * dX2
+b_west = H_west.flatten()
+b_east = np.zeros_like(b_west)
 b_north = np.zeros_like(b_west)
 b_south = np.zeros_like(b_west)
 
@@ -75,7 +86,8 @@ B = assembly.five_point(
     fixed,
     False,
     )
-d = B.toarray()
+
+
 source = assembly.build_source(
     H_east,
     H_west,
@@ -136,33 +148,13 @@ def newton_iteration(A_sparse, B_sparse, f, max_iter=300, tol=1e-8):
     y_sol = np.maximum(0, z[n:])
     return x_sol, y_sol
 
-pressure, cavitation = newton_iteration(A, B, rhs - A @ (cavitation_pressure*np.ones(x1_nodes*x2_nodes)))
+u, cavitation = newton_iteration(A, B, rhs)# - A @ (cavitation_pressure*np.ones(x1_nodes*x2_nodes)))
 
 
-
-# pressure = spsolve(A.tocsr(), rhs).reshape(x2_nodes, x1_nodes)
-# cavitation = spsolve(B.tocsr(), rhs).reshape(x2_nodes, x1_nodes)
-
-# max_it = 100
-# is_cavitated = np.array(pressure.flatten() < 0)
-# is_cavitated = is_cavitated.astype(float)
-# test= np.array(is_cavitated)
-# test = test.astype(float)
-
-
-# for k in range(1,max_it+1):
-
-#     M = A @ sp.diags_array(np.ones_like(is_cavitated)-is_cavitated) - B @ sp.diags_array(is_cavitated)
-#     z = spsolve(M.tocsr(), rhs).reshape(x2_nodes, x1_nodes)
-#     comparison = np.array(z.flatten() < 0)
-#     is_cavitated += comparison.astype(float)
-#     test += comparison.astype(float)
-#     is_cavitated = np.mod(is_cavitated, 2)
-    
-# print(test)+cavitation_pressure
-pressure = pressure.reshape(x2_nodes, x1_nodes)+cavitation_pressure
+u = u.reshape(x2_nodes, x1_nodes)
 cavitation = cavitation.reshape(x2_nodes, x1_nodes)
-
+# pressure = pressure.reshape(x2_nodes, x1_nodes)
+pressure = np.log(u + 1) * bulk_modulus + cavitation_pressure
 fig, ax = plt.subplots(figsize=(10, 6))
 bbox = {"boxstyle": "round", "facecolor": "white", "alpha": 0.8}
 
@@ -173,5 +165,3 @@ ax.set_xlabel("Dimensionless sliding direction")
 ax.set_ylabel("Dimensionless pressure")
 ax.legend()
 plt.show()
-
-
