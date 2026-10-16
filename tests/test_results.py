@@ -34,9 +34,11 @@ def test_polar_default_result_is_unchanged():
 
 def test_cartesian_matches_the_analytical_solution_on_a_wide_pad():
     # Little side leakage on a wide pad, so mid span should match 1D
-    pressure, X_vector, _, H_taper = cartesian.solve(
-        length=1.0, width=10.0, x_nodes=80, y_nodes=80
+    h_taper, h_min = 5e-6, 20e-6
+    pressure, X_vector, _ = cartesian.solve(
+        length=1.0, width=10.0, h_taper=h_taper, h_min=h_min, x1_nodes=80, x2_nodes=80
     )
+    H_taper = h_taper / h_min
 
     mid_span = pressure[80 // 2, :]
     exact = analytical.pressure_1D(X_vector, H_taper)
@@ -54,7 +56,7 @@ def test_polar_matches_cartesian_on_a_matched_square_pad():
         Ri=Ri, Ro=Ro, r_nodes=50, theta_nodes=50, theta1=0, theta2=theta2
     )[0]
     cartesian_pressure = cartesian.solve(
-        length=1.0, width=1.0, x_nodes=50, y_nodes=50
+        length=1.0, width=1.0, x1_nodes=50, x2_nodes=50
     )[0]
 
     # polar scales pressure with omega * Ro**2, cartesian with u_s * length.

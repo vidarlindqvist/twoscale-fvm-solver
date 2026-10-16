@@ -7,3 +7,6 @@ __pycache__/
 build/
 !report/figures/*.png
 report/main.pdf
+
+# Local GP proposal, not part of the course project
+proposal/

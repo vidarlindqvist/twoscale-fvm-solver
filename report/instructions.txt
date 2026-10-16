@@ -19,6 +19,14 @@ Install Typst (one of):
 Editor: use VS Code with the "Tinymist" extension. It gives a live preview,
 autocompletion, jump-to-error and click-in-preview-to-jump-to-source.
 
+Previewing while editing a chapter: open report/main.typ, open the command
+palette (Ctrl+Shift+P) and run the Tinymist command "Pin the main file to the
+currently opened document". Then open the preview. Tinymist keeps compiling
+main.typ while you edit any file in chapters/, so the preview always shows the
+whole report. Without pinning, Tinymist treats the chapter file as its own
+document, which has no title page or style, so references to other chapters
+show as errors.
+
 Build from the repository root:
     typst compile report/main.typ    -> report/main.pdf
     typst watch report/main.typ      -> rebuilds on every save
@@ -31,7 +39,14 @@ installing.
 --------
 
     ltu.typ               The style. You should almost never need to edit it.
-    main.typ              The report itself. This is where you write.
+    main.typ              Title, abstract, notation and the list of chapters.
+                          This is the file you compile and preview.
+    chapters/             The text, one file per chapter. This is where you write:
+        1-introduction.typ
+        2-theory.typ
+        3-method.typ
+        4-results.typ
+        5-discussion.typ
     refs.bib              References, in ordinary BibTeX format.
     figures/              Images. ltu-logo.jpg is the LTU logo.
     instructions.txt      This file.
@@ -75,7 +90,21 @@ From these the template builds:
     - numbered equations (1), figures and tables
     - an IEEE-style numbered reference list, ordered by first citation
 
-Everything after the `#show:` line in main.typ is the report body.
+Everything after the `#show:` line in main.typ is the report body. The body
+is just the chapters pulled in one by one:
+
+    #include "chapters/1-introduction.typ"
+    #include "chapters/2-theory.typ"
+    ...
+
+#include pastes a file's content at that point, so the chapters get the
+style, numbering, labels and references as if they were one file. Each chapter
+starts with its own `= Heading`.
+    - New chapter: create chapters/N-name.typ and add an #include line.
+    - Reorder chapters: reorder the #include lines. Section numbers follow.
+    - Drop a chapter for now: comment out its line with //.
+    - Image paths in chapter files start with ../ because they are relative to
+      the chapter file: image("../figures/pressure.svg").
 
 
 4. TYPST CHEAT SHEET
@@ -126,14 +155,14 @@ Math
 
 Figures
     #figure(
-      image("figures/pressure.svg", width: 70%),
+      image("../figures/pressure.svg", width: 70%),
       caption: [Dimensionless pressure $P$ on the pad.],
     ) <fig:pressure>
 
     Two figures side by side:
     #figure(
       grid(columns: 2, gutter: 1em,
-        image("figures/a.svg"), image("figures/b.svg")),
+        image("../figures/a.svg"), image("../figures/b.svg")),
       caption: [Raw data (left) and log-log data (right).],
     ) <fig:data>
 
@@ -182,15 +211,8 @@ Option A: git (recommended, since the code is already in git)
     - Write one sentence per line. Typst ignores single line breaks, so the
       PDF looks the same, but git diffs and merges become line-by-line
       instead of paragraph-by-paragraph.
-    - Once the report grows, split it into one file per section so you rarely
-      edit the same file at the same time:
-          report/sections/theory.typ
-          report/sections/results.typ
-      and in main.typ write:
-          #include "sections/theory.typ"
-          #include "sections/results.typ"
-      Each section file starts with its own `= Heading`. Labels and citations
-      work across files.
+    - Each chapter is its own file, so you rarely edit the same file at the
+      same time. Labels and citations work across files.
     - Agree on who owns which section. Pull before you start, commit small and
       often, and push when you stop.
 
@@ -234,7 +256,8 @@ Option B: typst.app
     "unknown variable: diff" Use partial. Typst renamed it.
     "label does not exist"   Typo in @label, or the label was never attached.
     "file not found"         Image paths are relative to the .typ file that
-                             contains the image() call.
+                             contains the image() call. In chapters/ that
+                             means "../figures/...".
     Figure ended up on       Typst places figures where you write them. To let
     another page             one float, use #figure(..., placement: auto).
 
