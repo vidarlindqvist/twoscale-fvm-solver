@@ -103,9 +103,10 @@ def table(roughness, alphas, n=64):
     def interpolant(column):
         spline = CubicSpline(alphas, values[:, column])
         def phi(H):
-            tol = 3
-            # Rounding is used to eliminate numerical errors
-            if round( alphas[0] - H.min(), tol) < 0 or round(H.max() - alphas[-1], tol) < 0 :
+            # The boundary faces lie half a cell outside the pad, so the film
+            # there may overshoot the table slightly. Allow that, refuse more.
+            tol = 1e-3
+            if H.min() < alphas[0] - tol or H.max() > alphas[-1] + tol:
                 raise ValueError(
                     f"film thickness {H.min():.3f} to {H.max():.3f} is outside "
                     f"the table, alpha {alphas[0]} to {alphas[-1]}"

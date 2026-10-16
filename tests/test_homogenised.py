@@ -78,8 +78,8 @@ def test_resolved_rough_pad_converges_to_the_homogenised_pad():
     pad = {"length": 1.0, "width": 1.0}
 
     phi_x, phi_y, phi_s = homogenised.table(roughness, ALPHAS, n=20)
-    P_0, X_vector, Y_vector, _ = cartesian.solve(
-        **pad, x_nodes=161, y_nodes=161, phi_x=phi_x, phi_y=phi_y, phi_s=phi_s
+    P_0, X_vector, Y_vector = cartesian.solve(
+        **pad, x1_nodes=161, x2_nodes=161, phi_x=phi_x, phi_y=phi_y, phi_s=phi_s
     )
     load_0 = load.cartesian(P_0, X_vector, Y_vector)
 
@@ -87,10 +87,10 @@ def test_resolved_rough_pad_converges_to_the_homogenised_pad():
     errors = []
     for epsilon in [1 / 8, 1 / 16]:
         nodes = round(20 / epsilon) + 1
-        P_eps, X_eps, Y_eps, _ = cartesian.solve(
+        P_eps, X_eps, Y_eps = cartesian.solve(
             **pad,
-            x_nodes=nodes,
-            y_nodes=nodes,
+            x1_nodes=nodes,
+            x2_nodes=nodes,
             film_thickness=film.rough(film.cartesian, roughness, epsilon),
         )
         errors.append(abs(load.cartesian(P_eps, X_eps, Y_eps) / load_0 - 1))
