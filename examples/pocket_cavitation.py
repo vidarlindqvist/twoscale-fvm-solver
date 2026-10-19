@@ -47,12 +47,12 @@ a_east, a_west, a_north, a_south, a_P = assembly.cartesian_coefficients(
     dX2
     )
 
-U=1
-H_P = H(X1, X2).flatten()
-c = bulk_modulus * h_min ** 2 / ( 6 * mu * length * U) 
-a_P = c * a_P - 1 / 2 * (H_west - H_east).flatten()
-a_west += 1 / 2 * H_west.flatten()
-a_east -= 1 / 2 * H_east.flatten()
+# U=1
+# c = bulk_modulus * h_min ** 2 / (6 * mu * length * U) 
+
+# a_P = c * a_P - 0.5 * (H_west - H_east).flatten()
+# a_west = a_west + 0.5 * H_west.flatten()
+# a_east = a_east - 0.5 * H_east.flatten()
 
 
 A = assembly.five_point(
@@ -65,11 +65,11 @@ A = assembly.five_point(
     x2_nodes,
     fixed,
     periodic=False,
-    )
+)
 
 
-b_P = H_east.flatten()
-b_west = H_west.flatten()
+b_P = H_east.flatten() * dX2
+b_west = H_west.flatten() * dX2
 b_east = np.zeros_like(b_west)
 b_north = np.zeros_like(b_west)
 b_south = np.zeros_like(b_west)
@@ -97,7 +97,9 @@ source = assembly.build_source(
     dX2,
     (1,0)
     )
-    
+
+
+u_edge = np.exp(-cavitation_pressure/bulk_modulus)-1
 rhs = -assembly.identity_rhs(source, fixed)
 
 
@@ -148,13 +150,13 @@ def newton_iteration(A_sparse, B_sparse, f, max_iter=300, tol=1e-8):
     y_sol = np.maximum(0, z[n:])
     return x_sol, y_sol
 
-u, cavitation = newton_iteration(A, B, rhs)# - A @ (cavitation_pressure*np.ones(x1_nodes*x2_nodes)))
+pressure, cavitation = newton_iteration(A, B, rhs - A @ (cavitation_pressure*np.ones(x1_nodes*x2_nodes)))
 
 
-u = u.reshape(x2_nodes, x1_nodes)
+# u = u.reshape(x2_nodes, x1_nodes)
 cavitation = cavitation.reshape(x2_nodes, x1_nodes)
-# pressure = pressure.reshape(x2_nodes, x1_nodes)
-pressure = np.log(u + 1) * bulk_modulus + cavitation_pressure
+pressure = pressure.reshape(x2_nodes, x1_nodes)
+# pressure = np.log(u + 1) * bulk_modulus + cavitation_pressure
 fig, ax = plt.subplots(figsize=(10, 6))
 bbox = {"boxstyle": "round", "facecolor": "white", "alpha": 0.8}
 
