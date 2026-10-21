@@ -106,7 +106,9 @@ rhs = -assembly.identity_rhs(source, fixed)
 
 def newton_iteration(A_sparse, B_sparse, f, max_iter=300, tol=1e-8):
     n = A_sparse.shape[0]
-    z = np.ones(2 * n)  # Initial guess [x; y]
+    P0 = spsolve(A_sparse.tocsr(),f)
+
+    z = np.concat([P0, np.zeros( n)])  # Initial guess [x; y]
     
     def fischer_burmeister_and_derivative(a, b, eps=1e-12): 
         denom = np.sqrt(a**2 + b**2 + eps)
