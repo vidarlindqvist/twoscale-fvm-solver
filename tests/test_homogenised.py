@@ -50,6 +50,21 @@ def test_bisinusoidal_roughness_has_no_cross_terms():
     assert max(abs(phi_xy), abs(phi_yx), abs(phi_sy)) < 1e-12
 
 
+def test_flow_factors_scale_with_alpha():
+    # H = alpha (1 + H_r / alpha), so a cell at any alpha is the alpha = 1 cell
+    # with the roughness divided by alpha. The GP is trained at alpha = 1 only
+    # and relies on this. Oblique and anisotropic, so all six factors differ.
+    def roughness(y1, y2):
+        return 0.2 * (1 + np.sin(2 * np.pi * (y1 + y2))) + 0.1 * (1 + np.sin(2 * np.pi * y1))
+
+    alpha = 2.0
+    direct = homogenised.flow_factors(roughness, alpha, n=32)
+    scaled = homogenised.flow_factors(lambda y1, y2: roughness(y1, y2) / alpha, 1.0, n=32)
+
+    powers = np.array([3, 3, 1, 3, 3, 1])
+    assert np.array(direct) == pytest.approx(alpha**powers * np.array(scaled), rel=1e-12)
+
+
 def test_oblique_ridges_warn_about_cross_terms():
     def oblique(y1, y2):
         return 0.5 + 0.5 * np.sin(2 * np.pi * (y1 + y2))

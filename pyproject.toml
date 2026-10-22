@@ -12,6 +12,9 @@ dependencies = [
 dev = [
     "pytest",
 ]
+gp = [
+    "scikit-learn",
+]
 
 [build-system]
 requires = ["setuptools"]
@@ -19,3 +22,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

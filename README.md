@@ -14,7 +14,8 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 ```
 
-Needs Python 3.10 or newer. The `[dev]` part also installs pytest.
+Needs Python 3.10 or newer. The `[dev]` part also installs pytest. For the
+GP work, add `gp` (scikit-learn): `pip install -e ".[dev,gp]"`.
 
 ## Layout
 
@@ -27,6 +28,10 @@ Needs Python 3.10 or newer. The `[dev]` part also installs pytest.
 | `homogenised.py` | cell problems, flow factors and the flow factor table |
 | `load.py` | load carrying capacity |
 | `analytical.py` | 1D analytical solution |
+
+These are in `src/reynolds/`. `src/surfaces/` holds the random rough surface
+generator, an AI-assisted Python port of Andreas Almqvist's MATLAB code; see its
+README for the origin and how the port was verified.
 
 Everything is dimensionless: `H = h / h_min`, pad coordinates are divided by the
 pad length (polar: by `Ro`) and cell coordinates by the roughness wavelength.
@@ -52,7 +57,7 @@ import numpy as np
 from reynolds import cartesian, film, homogenised, load
 
 phi_x, phi_y, phi_s = homogenised.table(film.bisinusoidal(0.2), alphas=np.linspace(0.9, 1.4, 26))
-P_0, X_vector, Y_vector, H_taper = cartesian.solve(phi_x=phi_x, phi_y=phi_y, phi_s=phi_s)
+P_0, X_vector, Y_vector = cartesian.solve(phi_x=phi_x, phi_y=phi_y, phi_s=phi_s)
 print(load.cartesian(P_0, X_vector, Y_vector))
 ```
 
