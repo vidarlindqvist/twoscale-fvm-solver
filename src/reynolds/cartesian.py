@@ -21,7 +21,7 @@ def solve(
     # Grid size
     x1_nodes=50,
     x2_nodes=50,
-    film_thickness=film.cartesian,
+    film_thickness=film.tilted_pad,
     # Flow factors
     phi_x=lambda H: H**3,
     phi_y=lambda H: H**3,
@@ -38,7 +38,7 @@ def solve(
     dX2 = (width / length) / (x2_nodes - 1)
 
     # Dimensionless height function
-    H = film_thickness(length, width, h_taper, h_min)
+    H = film_thickness
 
     # Height at intermediate points
     H_east, H_west, H_north, H_south = film.faces(H, X1, X2, dX1, dX2)
@@ -65,4 +65,4 @@ def solve(
     # Solving
     pressure = spsolve(A.tocsr(), rhs).reshape(x2_nodes, x1_nodes)
 
-    return pressure, X1_vector, X2_vector
+    return pressure

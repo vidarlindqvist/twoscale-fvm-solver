@@ -6,11 +6,11 @@ import numpy as np
 def pocket(H_max, H_min, a, b):
 # Step function
     def H(X1, X2):
-        return np.where((X1 >= a) & (X1 <= b), H_min, H_max) + 0 *X2
+        return np.where((X1 >= a) & (X1 <= b), H_max, H_min) + 0 *X2
     return H 
         
         
-def cartesian(length, width, h_taper, h_min):
+def tilted_pad(length, width, h_taper, h_min):
     # Real height function
     def h(x1, x2):
         return h_min + h_taper * (length - x1) / length
@@ -40,22 +40,17 @@ def bisinusoidal(amplitude):
     # Roughness on the unit cell, with minimum 0 so that alpha is the smallest gap
     def H_r(y1, y2):
         return amplitude * (1 + np.sin(2 * np.pi * y1) * np.sin(2 * np.pi * y2))
-
     return H_r
 
 
 def rough(film_thickness, roughness, epsilon):
     # A smooth pad film with the roughness drawn in at wavelength epsilon,
     # used to solve the rough pad directly and compare with the homogenised one
-    def rough_film_thickness(*geometry):
-        H_0 = film_thickness(*geometry)
 
-        def H(X1, X2):
-            return H_0(X1, X2) + roughness(X1 / epsilon, X2 / epsilon)
+    def H(X1, X2):
+        return film_thickness(X1, X2) + roughness(X1 / epsilon, X2 / epsilon)
+    return H
 
-        return H
-
-    return rough_film_thickness
 
 
 def faces(H, first, second, d_first, d_second):

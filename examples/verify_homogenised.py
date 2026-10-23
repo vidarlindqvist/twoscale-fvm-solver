@@ -9,27 +9,48 @@ import numpy as np
 
 from reynolds import cartesian, film, homogenised, load
 
+
+length = 1000e-3
+width = 1000e-3
+h_taper = 5e-6
+h_min = 20e-6
+
 roughness = film.bisinusoidal(-0.1)
 
-nodes_per_wavelength = 16   # y1_nodes and y2_nodes
+nodes_per_wavelength = 9   # y1_nodes and y2_nodes
 epsilons = [1 / 4, 1 / 8, 1 / 16, 1 / 32]
 x1_nodes=256
-x2_nodes=256
+x2_nodes=21
+X1_vector = np.linspace(0, 1, x1_nodes)
+X2_vector = np.linspace(0, width / length, x2_nodes)
+X1, X2 = np.meshgrid(X1_vector, X2_vector)
 
-pad = {"length": 1.0, "width": 1.0, "h_taper": 5e-6, "h_min": 20e-6}
+
+
+
+pad = {"length": length, "width": width, "h_taper": h_taper, "h_min": h_min}
 
 alphas = np.linspace(1, ( pad["h_min"] + pad["h_taper"] ) / pad["h_min"], 32)
 
 # Smooth pad, for reference
-P_smooth, X1_vector, X2_vector = cartesian.solve(**pad, x1_nodes=x1_nodes, x2_nodes=x2_nodes)
+P_smooth = cartesian.solve(**pad,
+                           x1_nodes=x1_nodes,
+                           x2_nodes=x2_nodes,
+                           film_thickness=film.tilted_pad(**pad))
+
 load_smooth = load.cartesian(P_smooth, X1_vector, X2_vector)
 print(f"smooth         load {load_smooth:.6f}")
 
 
 # Homogenised pad, the flow factor table replaces H**3 and H
 phi_x, phi_y, phi_s = homogenised.table(roughness, alphas, n=nodes_per_wavelength)
-P_homogenised, X1_vector, X2_vector = cartesian.solve(
-    **pad, x1_nodes=x1_nodes, x2_nodes=x2_nodes, phi_x=phi_x, phi_y=phi_y, phi_s=phi_s
+P_homogenised = cartesian.solve(**pad,
+                                x1_nodes=x1_nodes,
+                                x2_nodes=x2_nodes, 
+                                film_thickness=film.tilted_pad(**pad),
+                                phi_x=phi_x,
+                                phi_y=phi_y, 
+                                phi_s=phi_s,
 )
 
 load_homogenised = load.cartesian(P_homogenised, X1_vector, X2_vector)
@@ -49,12 +70,13 @@ fig, ax = plt.subplots(figsize=(8, 5))
 
 for epsilon in epsilons:
     nodes = round(nodes_per_wavelength / epsilon)+1
-
-    P_eps, X1_eps, X2_eps = cartesian.solve(
+    X1_eps = np.linspace(0, 1, nodes)
+    X2_eps = np.linspace(0, width / length, nodes)
+    P_eps = cartesian.solve(
         **pad,
         x1_nodes=nodes,
         x2_nodes=nodes,
-        film_thickness=film.rough(film.cartesian, roughness, epsilon),
+        film_thickness=film.rough(film.tilted_pad(**pad), roughness, epsilon),
     )
     load_eps = load.cartesian(P_eps, X1_eps, X2_eps)
     ax.plot(X1_eps, P_eps[len(X2_eps) // 2 - plot_offset,:],
@@ -62,16 +84,16 @@ for epsilon in epsilons:
             label=rf"perturbed $\varepsilon$ = 1/{round(1/epsilon)}",
             )
 
-ax.plot(X1_vector, P_smooth[len(X2_vector) // 2 - plot_offset, :],
+ax.plot(X1_vector, P_smooth[len(X2_vector) // 2, :],
         "-",
         label="smooth"
         )
 
-ax.plot(X1_vector, P_homogenised[len(X2_vector) // 2 - plot_offset, :],
+ax.plot(X1_vector, P_homogenised[len(X2_vector) // 2, :],
         label="homogenised",
         color = "black"
         )
-
+plt.ylim(0, 0.019)
 ax.set_xlabel("Dimensionless sliding direction")
 ax.set_ylabel("Dimensionless pressure")
 ax.legend()

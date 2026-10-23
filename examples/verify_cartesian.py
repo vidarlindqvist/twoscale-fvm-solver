@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from reynolds import analytical, cartesian
+from reynolds import analytical, cartesian, film
 
 length = 148e-3
 width = 500e-3
@@ -12,14 +12,19 @@ h_min = 20e-6
 x1_nodes = 164
 x2_nodes = 164
 
+X1_vector = np.linspace(0, 1, x1_nodes)
+X2_vector = np.linspace(0, width / length, x2_nodes)
+X1, X2 = np.meshgrid(X1_vector, X2_vector)
 
-cartesian_pressure, X_vector, Y_vector = cartesian.solve(
+
+cartesian_pressure = cartesian.solve(
     length=length,
     width=width,
     h_taper=h_taper,
     h_min=h_min,
     x1_nodes=x1_nodes,
     x2_nodes=x2_nodes,
+    film_thickness=film.tilted_pad(length, width, h_taper, h_min)
 )
 
 H_taper = h_taper / h_min
@@ -40,7 +45,7 @@ bbox = {"boxstyle": "round", "facecolor": "white", "alpha": 0.8}
 ax.text(
     0.80, 0.85, text_str, transform=ax.transAxes, verticalalignment="top", bbox=bbox
 )
-ax.plot(X_vector, cartesian_pressure[x2_nodes // 2, :], label="Cartesian FVM")
+ax.plot(X1_vector, cartesian_pressure[x2_nodes // 2, :], label="Cartesian FVM")
 ax.plot(Xs, analytical_pressure, "--", label="Analytical 1D")
 
 
@@ -48,5 +53,5 @@ ax.set_xlabel("Dimensionless sliding direction")
 ax.set_ylabel("Dimensionless pressure")
 ax.legend()
 
-fig.savefig("verify_cartesian.png", dpi=200, bbox_inches="tight")
+fig.savefig("verify_cavitation.png", dpi=200, bbox_inches="tight")
 plt.show()

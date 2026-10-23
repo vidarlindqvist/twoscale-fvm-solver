@@ -16,7 +16,9 @@ length = 20e-3
 width = 2000e-3
 p_c = -1e-4 # (p_c - p_in) / (6 mu U l / h0^2)
 
-x1_nodes = 101   # Weird things happens at 91
+pad = {"H_max": H_max, "H_min": H_min, "a": a, "b": b}
+
+x1_nodes = 101   # Weird things happens at 11,26,27,36,56,75,91
 x2_nodes = 21
 
 X_vector = np.linspace(0, 1, 1001)  # For analytical solution
@@ -31,12 +33,12 @@ numerical_pressure, cavitation = cavitation.solve(
         x1_nodes = x1_nodes,
         x2_nodes = x2_nodes,
         cavitation_pressure = p_c,
-        film_thickness=film.pocket(H_min, H_max, a, b)
+        film_thickness=film.pocket(**pad)
     )
 
 
 # Analytical 1D solution
-def analytic_pocket(X, a, b, H_min, H_max, p_c):
+def analytic_pocket(X, H_max, H_min, a, b, p_c):
     C1 = p_c / a
     C2 = 0
     C3 = (H_min - H_min ** 3 * C1 - H_max) / ( - H_max ** 3) 
@@ -53,11 +55,11 @@ def analytic_pocket(X, a, b, H_min, H_max, p_c):
                   )
     return p
 
-analytical_pressure = analytic_pocket(X_vector, a, b, H_min, H_max, p_c)
+analytical_pressure = analytic_pocket(X=X_vector, **pad, p_c=p_c)
 
 # Comparing 
 
-difference = numerical_pressure[x2_nodes // 2, :] - analytic_pocket(X1_vector, a, b, H_min, H_max, p_c)
+difference = numerical_pressure[x2_nodes // 2, :] - analytic_pocket(X=X1_vector, **pad, p_c=p_c)
 rms_error = np.sqrt(np.mean(difference**2)) / np.sqrt(np.mean(numerical_pressure**2))
 print(f"Relative RMS error   {rms_error:.3e}")
 

@@ -18,6 +18,10 @@ def solve(
         x2_nodes = 21,
         cavitation_pressure = -1e-4, # (p_c - p_in) / (6 mu U l / h0^2)
         film_thickness=film.pocket,
+        # Flow factors
+        phi_x=lambda H: H**3,
+        phi_y=lambda H: H**3,
+        phi_s=lambda H: H,
         ):
     
 
@@ -37,10 +41,10 @@ def solve(
     fixed = boundary.all_edges(x1_nodes, x2_nodes)
     
     a_east, a_west, a_north, a_south, a_P = assembly.cartesian_coefficients(
-        H_east ** 3,
-        H_west ** 3,
-        H_north ** 3,
-        H_south ** 3,
+        phi_x(H_east),
+        phi_x(H_west),
+        phi_y(H_north),
+        phi_y(H_south),
         dX1,
         dX2
         )
@@ -79,10 +83,10 @@ def solve(
     
     
     source = assembly.build_source(
-        H_east,
-        H_west,
-        H_north,
-        H_south,
+        phi_s(H_east),
+        phi_s(H_west),
+        phi_s(H_north),
+        phi_s(H_south),
         dX1,
         dX2,
         (1,0)
@@ -98,7 +102,8 @@ def solve(
         n = A_sparse.shape[0]
         P0 = spsolve(A_sparse.tocsr(),f)
     
-        z = np.concat([P0, np.zeros( n)])  # Initial guess [x; y]
+        z = np.concat([P0, np.zeros(n)])  # Initial guess [x; y]
+
         
         def fischer_burmeister_and_derivative(a, b, eps=1e-12): 
             denom = np.sqrt(a**2 + b**2 + eps)
@@ -119,7 +124,7 @@ def solve(
             
             # Check convergence
             res_norm = np.max(np.abs(res))
-            if res_norm*10 < tol:
+            if res_norm < tol:
                 print(f"Converged in {iteration} iterations.")
                 break
                 
