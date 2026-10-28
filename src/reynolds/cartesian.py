@@ -21,7 +21,7 @@ def solve(
     # Grid size
     x1_nodes=50,
     x2_nodes=50,
-    film_thickness=film.tilted_pad,
+    film_thickness=film.tilted_pad(1, 1, 5e-6, 2e-5),
     # Flow factors
     phi_x=lambda H: H**3,
     phi_y=lambda H: H**3,

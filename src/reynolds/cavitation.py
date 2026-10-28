@@ -17,7 +17,7 @@ def solve(
         x1_nodes = 161,
         x2_nodes = 21,
         cavitation_pressure = -1e-4, # (p_c - p_in) / (6 mu U l / h0^2)
-        film_thickness=film.pocket,
+        film_thickness=film.pocket(10, 1, 0.1, 0.25),
         # Flow factors
         phi_x=lambda H: H**3,
         phi_y=lambda H: H**3,

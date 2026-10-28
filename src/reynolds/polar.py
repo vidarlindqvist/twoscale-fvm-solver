@@ -27,7 +27,7 @@ def solve(
     theta_nodes=50,
     theta1=0,
     theta2=55 * np.pi / 180,
-    film_thickness=film.polar,
+    film_thickness=film.polar(0.5, 1, 5e-6, 2e-5, 1),
 ):
     # (Ro-Ri) = Ri * theta2
     # Grid

@@ -14,7 +14,7 @@ H_max = 10
 length = 1000e-3
 width = 1000e-3
 p_c = -1e-4
-amplitude = 0.01
+amplitude = 0.05
 
 
 film_thickness = film.pocket(H_max, H_min, a, b)
@@ -32,9 +32,9 @@ inputs = {"length": length, "width": width, "x1_nodes":x1_nodes,
 
 
 roughness = film.bisinusoidal(-amplitude)
-epsilons = [1 / 16, 1 / 32]
+epsilons = [ 1 / 128]
 
-nodes_per_wavelength = 9  # y1_nodes and y2_nodes
+nodes_per_wavelength = 6  # y1_nodes and y2_nodes
 alphas = np.linspace(H_min - amplitude, H_max + amplitude, 100)
 
 # Calling flow factors
@@ -57,7 +57,7 @@ P_homogenised, homogenised_cavitation = cavitation.solve(
         )
 
 # Fully resolved solutions
-plot_offset = nodes_per_wavelength // 4 + 1
+plot_offset = (nodes_per_wavelength // 4 + 1)*0
 fig, ax = plt.subplots(figsize=(8, 5))
 
 for epsilon in epsilons:
