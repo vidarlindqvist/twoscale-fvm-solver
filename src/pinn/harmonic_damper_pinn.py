@@ -119,16 +119,16 @@ if __name__ == "__main__":
     # generate data/evaluation points
     tbc, tcolacation = datapoints()
     
-    epochs = 4_000
+    epochs = 4_100
     train_losses = np.zeros(epochs)
     
     for t in range(epochs):
         train_losses[t] = train(tbc, tcolacation, params, model, optimizer)
         
-        if t % 100 == 0:
+        if t % 100== 0:
             print(train_losses[t])
             
-    import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
     plt.figure()
     plt.plot(range(epochs), np.log(train_losses))
     plt.xlabel("Epochs")
