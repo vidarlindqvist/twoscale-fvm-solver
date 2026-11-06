@@ -10,7 +10,8 @@ algorithm and the method are Andreas Almqvist's. The port was verified against
 the original as described under "Verification" in README.md next to this file.
 
 Copied into twoscale-fvm-solver on 2026-10-22 from the standalone
-surface-generator project, unchanged apart from this note and the import path.
+surface-generator project, unchanged apart from this note, the import path and
+the isotropicBand option (2026-10-23, below).
 
     from surfaces.fractal_surface import defaults, fractal_surface
 
@@ -39,6 +40,15 @@ Differences from the MATLAB version
   1st/4th-order branches are never called by the generator.
 * Seeding never touches global random state (the MATLAB code saved and
   restored the caller's RNG to achieve the same thing).
+* Added option ``isotropicBand`` (default False, the MATLAB behaviour). The
+  original applies the long and short wavelength cut-offs to the anisotropic
+  wavenumber q = sqrt((a qx)^2 + (qy / a)^2), an ellipse that changes shape
+  with the anisotropy a. The longest waves of the cell lie right on it, so
+  whole modes switch on and off at fixed a: at a = 1 the (0, 2) mode leaves
+  and the (2, 0) mode enters, and the mean flow factors of the surfaces jump
+  by about the scatter between them. With isotropicBand the cut-offs use the
+  plain wavenumber sqrt(qx^2 + qy^2), so the set of modes is the same for
+  every a and only their power changes with it. Identical at a = 1.
 
 Option documentation, spectral conventions and provenance: see the header of
 ``fractal_surface_standalone.m`` (kept next to this file); everything there
@@ -100,6 +110,11 @@ class SurfaceError(ValueError):
     def __init__(self, ident, message):
         super().__init__(f'{message} ({ident})')
         self.id = ident
+        self.message = message
+
+    def __reduce__(self):
+        # So the error survives the trip back from a worker process
+        return type(self), (self.id, self.message)
 
 
 def _require(condition, ident, message):
@@ -274,7 +289,7 @@ def defaults():
     return Struct(
         Nx=512, Ny=512, distribution='Gaussian', spectrum='Self-affine',
         H=.5, beta=.01, anisotropy=1, weibullShape=1, biGaussianCoeff=4,
-        shortWavelength=1 / 64, longWavelength=.5, pipeline='app',
+        shortWavelength=1 / 64, longWavelength=.5, pipeline='app', isotropicBand=False,
         Lx=1, Ly=1, Sq=1, meanHeight=0, seed=20260927,
         maxIterations=999, minSpeed=1e-3, tolerance=1e-3,
         plot=True, visible='on', outputPrefix='', exportMAT=True,
@@ -311,7 +326,7 @@ def _validate(c):
     c.spectrum = _validatestring(c.spectrum, ('Self-affine', 'Exponential'), 'spectrum')
     c.pipeline = _validatestring(c.pipeline, ('app', 'band-first'), 'pipeline')
     c.visible = _validatestring(c.visible, ('on', 'off'), 'visible')
-    for f in ('plot', 'exportMAT', 'exportXYZ', 'exportHeight', 'exportPNG', 'overwrite'):
+    for f in ('plot', 'exportMAT', 'exportXYZ', 'exportHeight', 'exportPNG', 'overwrite', 'isotropicBand'):
         _require(isinstance(c[f], (bool, np.bool_, int, np.integer, float)) and c[f] in (0, 1),
                  'Surface:Option', f'{f} must be true/false.')
         c[f] = bool(c[f])
@@ -323,7 +338,7 @@ def _validate(c):
                  'Five-line height format requires dx=dy; use XYZ or MAT otherwise.')
     # Test band before calling the original helper (which normalizes its output).
     kx, ky = np.meshgrid(_mode_indices(c.Nx), _mode_indices(c.Ny))
-    k = np.hypot(c.anisotropy * kx, ky / c.anisotropy)
+    k = np.hypot(kx, ky) if c.isotropicBand else np.hypot(c.anisotropy * kx, ky / c.anisotropy)
     mask = k >= 1 / c.longWavelength
     if c.pipeline == 'band-first' and c.shortWavelength > 0:
         mask &= k <= 1 / c.shortWavelength
@@ -399,7 +414,8 @@ def fractal_surface(options=None, *, rng=None, **overrides):
     parameter = cfg.beta if cfg.spectrum == 'Exponential' else cfg.H
     short = cfg.shortWavelength if cfg.pipeline == 'band-first' else 0
     ZG, C = _fractal_surf_hu_tonder_anisotropic(
-        parameter, cfg.longWavelength, short, 1, 1, N / M, M, N, cfg.anisotropy, cfg.spectrum, rng)
+        parameter, cfg.longWavelength, short, 1, 1, N / M, M, N, cfg.anisotropy, cfg.spectrum, rng,
+        isotropic_band=cfg.isotropicBand)
     PS = np.abs(_fft2(ZG))
     PS[C == 0] = 0
     _require((PS > 0).any(), 'Surface:EmptySpectrum', 'Selected band contains no nonzero Fourier modes.')
@@ -576,7 +592,7 @@ def _plot_surface(s, visible):
     limit = min(c.Nx, c.Ny) / 2
     if c.shortWavelength > 0:
         limit = min(limit, max(c.anisotropy, 1 / c.anisotropy) / c.shortWavelength)
-    lower = min(c.anisotropy, 1 / c.anisotropy) / c.longWavelength
+    lower = (1 if c.isotropicBand else min(c.anisotropy, 1 / c.anisotropy)) / c.longWavelength
     with np.errstate(invalid='ignore'):
         show = np.isfinite(k) & (power > 0) & (k >= lower) & (k <= limit)
     ax3.loglog(k[show], power[show], 'o-', linewidth=1, markerfacecolor='none')
@@ -655,7 +671,8 @@ def _fractal_surf_generator(PS, Zh, max_it, min_speed, min_err):
     return Zh * Sq + Zh_mean, Zs * Sq + Zh_mean, history
 
 
-def _fractal_surf_hu_tonder_anisotropic(H, Llong, Lshort, Sq, Lx, Ly, M, N, af, PS, rng):
+def _fractal_surf_hu_tonder_anisotropic(H, Llong, Lshort, Sq, Lx, Ly, M, N, af, PS, rng,
+                                        isotropic_band=False):
     # Random surface with power spectral density C(q) ~ q^(-2*H-2) by the
     # digital-filter technique of Hu and Tonder (1992), Int. J. Mach. Tools
     # Manufact. 32(1/2) 83-90: filter a random sample to impose the spectrum.
@@ -679,9 +696,11 @@ def _fractal_surf_hu_tonder_anisotropic(H, Llong, Lshort, Sq, Lx, Ly, M, N, af, 
             C = q ** (-2 * (H + 1))
         else:  # Exponential
             C = H / (2 * math.pi * (q**2 + H**2) ** (3 / 2))
-    # Apply the cut-off's
-    C[q < minq] = 0
-    C[q > maxq] = 0
+    # Apply the cut-off's. With isotropic_band (not in the original) to the
+    # plain wavenumber, so the set of modes does not depend on af
+    q_band = np.sqrt(qx**2 + qy**2) if isotropic_band else q
+    C[q_band < minq] = 0
+    C[q_band > maxq] = 0
     # Rearange C to match the FFT ordering
     C = np.fft.fftshift(C[:-1, :-1])
 
