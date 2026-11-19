@@ -29,8 +29,7 @@ class MLP(nn.Module):
 
 
 def known_H(X, Y):
-    # return 1.1 + torch.sin(2*np.pi*X ) 
-    return 0.3 * (2 + torch.sin(2 * np.pi * X) * torch.sin(2 * np.pi * Y))
+    return 0.3 + 0.3 * (1 + torch.sin(2 * np.pi * X) * torch.sin(2 * np.pi * Y))
 
 
         
@@ -44,6 +43,7 @@ def physics_res(model, x, y):
     dP_dy = torch.autograd.grad(P, y, grad_outputs=torch.ones_like(P), create_graph=True)[0]
     
     dH_dx = torch.autograd.grad(H, x, grad_outputs=torch.ones_like(H), create_graph=True)[0]
+    dH_dy = torch.autograd.grad(H, y, grad_outputs=torch.ones_like(H), create_graph=True)[0]
     
     flux_x = (H ** 3) * dP_dx
     flux_y = (H ** 3) * dP_dy
@@ -51,7 +51,7 @@ def physics_res(model, x, y):
     dflux_dx = torch.autograd.grad(flux_x, x, grad_outputs=torch.ones_like(flux_x), create_graph=True)[0]
     dflux_dy = torch.autograd.grad(flux_y, y, grad_outputs=torch.ones_like(flux_y), create_graph=True)[0]
     # residual
-    return dflux_dx + dflux_dy - dH_dx
+    return dflux_dx + dflux_dy - dH_dx -dH_dy*0
         
 def boundary_loss(model, grid_size):  
     
@@ -124,7 +124,7 @@ def train(model, optimizer, grid_size=64):
     # Total loss combining physics and soft boundary constraints
     lambda_bc = 1e-2
     lambda_col = 1e-2
-    lambda_scale = 1e-2
+    lambda_scale = 5e-2
     
     loss = lambda_bc * loss_bc + lambda_col * loss_col + lambda_scale * loss_scale
     
@@ -148,8 +148,7 @@ def exact(x, y, H_taper):
 
         
 if __name__ == "__main__":
-    # set parameters
-    
+    plt.figure(figsize=(8, 6))
     # setup data
     hidden_layers = 4
     hidden_width = 32
@@ -171,32 +170,32 @@ if __name__ == "__main__":
     plt.semilogy(range(epochs), train_losses)
     plt.xlabel("Epochs")
     plt.ylabel("Training loss")
-    
-    
+        
+        
     x_test = torch.linspace(0, 1, 200)
     y_test = torch.linspace(0, 1, 200)
     
     X_grid, Y_grid = torch.meshgrid(x_test, y_test, indexing='ij')
     x_flat = X_grid.reshape(-1, 1)
     y_flat = Y_grid.reshape(-1, 1)
+        
+    with torch.no_grad():
+            P_pred = model(x_flat, y_flat)
+        
+        # Reshape the prediction back into a 2D grid matching X_grid and Y_grid
+    P_grid = P_pred.reshape(200, 200).cpu().numpy()
     
-with torch.no_grad():
-        P_pred = model(x_flat, y_flat)
+    # Convert PyTorch meshgrids to NumPy for plotting
+    X_np = X_grid.cpu().numpy()
+    Y_np = Y_grid.cpu().numpy()
     
-    # Reshape the prediction back into a 2D grid matching X_grid and Y_grid
-P_grid = P_pred.reshape(200, 200).cpu().numpy()
-
-# Convert PyTorch meshgrids to NumPy for plotting
-X_np = X_grid.cpu().numpy()
-Y_np = Y_grid.cpu().numpy()
-
-# 3. Plot using matplotlib contourf (filled contour plot)
-plt.figure(figsize=(8, 6))
-contour = plt.contourf(X_np, Y_np, P_grid, levels=50, cmap='viridis')
-plt.colorbar(contour, label='Predicted Pressure (P)')
-plt.xlabel('X Coordinate')
-plt.ylabel('Y Coordinate')
-plt.title('2D PINN Pressure Prediction Field')
-# plt.axes(projection='3d').plot_surface(X_np, Y_np, P_grid, cmap='viridis')
-plt.show()
-    
+    # 3. Plot using matplotlib contourf (filled contour plot)
+    plt.figure(figsize=(8, 6))
+    contour = plt.contourf(X_np, Y_np, P_grid, levels=50, cmap='viridis')
+    plt.colorbar(contour, label='Predicted Pressure (P)')
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.title('2D PINN Pressure Prediction Field')
+    # plt.axes(projection='3d').plot_surface(X_np, Y_np, P_grid, cmap='viridis')
+    plt.show()
+        
